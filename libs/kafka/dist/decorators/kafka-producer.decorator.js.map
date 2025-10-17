@@ -1,0 +1,1 @@
+{"version":3,"file":"kafka-producer.decorator.js","sourceRoot":"","sources":["../../src/decorators/kafka-producer.decorator.ts"],"names":[],"mappings":";;AACA,kDAIG;AAJH,SAAgB,mBAAmB;IAC/B,OAAO,UAAU,MAAW,EAAE,WAAmB,EAAE,UAA8B;QAC/E,OAAO,CAAC,cAAc,CAAC,gBAAgB,EAAE,IAAI,EAAE,MAAM,EAAE,WAAW,CAAC,CAAC;IACtE,CAAC,CAAC;AACJ,CAAC"}

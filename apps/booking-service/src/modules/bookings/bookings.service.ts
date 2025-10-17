@@ -4,13 +4,13 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { BookingStatus } from '@prisma/client';
 import { FindAllDto } from 'src/common/global/find-all.dto';
-import { KafkaProducerService } from '../kafka/kafka.producer.service';
+import { BookingKafkaService } from '../kafka/booking-kafka.service';
 
 @Injectable()
 export class BookingService {
   constructor(
     private prisma: PrismaService,
-    private kafkaService: KafkaProducerService,
+    private kafkaService: BookingKafkaService,
   ) { }
 
   async create( userId: string, dto: CreateBookingDto,) {
@@ -31,16 +31,14 @@ export class BookingService {
       include: { details: true },
     });
 
-    await this.kafkaService.emitBookingCreatedEvent({
+    await this.kafkaService.publishBookingCreatedEvent({
       bookingId: booking.id,
       userId: booking.userId,
-      status: booking.status,
+      roomId: booking.details[0]?.roomId || '',
+      amount: booking.details.reduce((sum, d) => sum + d.price, 0),
       startDate: booking.startDate,
       endDate: booking.endDate,
-      details: booking.details.map((d) => ({
-        roomId: d.roomId,
-        price: d.price,
-      })),
+      status: booking.status,
     });
 
     return booking;
@@ -132,10 +130,14 @@ export class BookingService {
       include: { details: true },
     });
 
-    await this.kafkaService.emitBookingCreatedEvent({
+    await this.kafkaService.publishBookingCreatedEvent({
       bookingId: booking.id,
+      userId: booking.userId,
+      roomId: booking.details[0]?.roomId || '',
+      amount: booking.details.reduce((sum, d) => sum + d.price, 0),
+      startDate: booking.startDate,
+      endDate: booking.endDate,
       status: booking.status,
-      details: booking.details.map((d) => d.roomId),
     });
 
     return booking;
@@ -148,10 +150,11 @@ export class BookingService {
       include: { details: true },
     });
 
-    await this.kafkaService.emitBookingCanceledEvent({
+    await this.kafkaService.publishBookingCanceledEvent({
       bookingId: booking.id,
       userId: booking.userId,
-      details: booking.details.map((d) => d.roomId),
+      reason: 'Manual cancellation',
+      canceledAt: new Date(),
     });
 
     return booking;
