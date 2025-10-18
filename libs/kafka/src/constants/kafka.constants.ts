@@ -1,4 +1,0 @@
-export const KAFKA_MODULE_OPTIONS = 'KAFKA_MODULE_OPTIONS';
-export const KAFKA_PRODUCER = 'KAFKA_PRODUCER';
-export const KAFKA_CONSUMER = 'KAFKA_CONSUMER';
-export const DEFAULT_DLQ_SUFFIX = '.dlq';
