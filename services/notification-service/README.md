@@ -1,98 +1,286 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🔔 Notification Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Notification Service cho Dorm Booking System với hỗ trợ gửi email qua Nodemailer và WebSocket real-time notifications.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🏗️ Kiến trúc SOLID
 
-## Description
+Service được thiết kế theo nguyên tắc SOLID:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### **Single Responsibility Principle (SRP)**
+- `EmailService`: Chỉ xử lý gửi email
+- `WebSocketService`: Chỉ xử lý WebSocket connections
+- `TemplateService`: Chỉ xử lý email templates
+- `NotificationService`: Orchestrate các services khác
 
-## Project setup
+### **Open/Closed Principle (OCP)**
+- Có thể extend thêm channels mới (SMS, Push) mà không modify code hiện tại
+- Interface-based design cho easy extension
 
-```bash
-$ npm install
+### **Liskov Substitution Principle (LSP)**
+- Tất cả services implement interfaces có thể thay thế lẫn nhau
+
+### **Interface Segregation Principle (ISP)**
+- Interfaces được chia nhỏ theo chức năng cụ thể
+
+### **Dependency Inversion Principle (DIP)**
+- Depend on abstractions, not concretions
+
+## 🚀 Tính năng
+
+### **Email Notifications**
+- ✅ Gửi email với Nodemailer
+- ✅ Template engine với Handlebars
+- ✅ Bulk email sending
+- ✅ Error handling và retry logic
+
+### **WebSocket Notifications**
+- ✅ Real-time notifications
+- ✅ User authentication
+- ✅ Room-based messaging
+- ✅ Connection management
+
+### **Template System**
+- ✅ Handlebars templates
+- ✅ Custom helpers (formatCurrency, formatDate, etc.)
+- ✅ Template caching
+- ✅ Dynamic content rendering
+
+## 📁 Cấu trúc thư mục
+
+```
+src/
+├── notification/
+│   ├── interfaces/           # SOLID interfaces
+│   ├── services/            # Service implementations
+│   ├── gateways/            # WebSocket gateway
+│   ├── dto/                 # Data Transfer Objects
+│   ├── notification.service.ts
+│   ├── notification.controller.ts
+│   └── notification.module.ts
+├── common/
+│   └── mail/
+│       └── templates/       # Email templates
+└── app.module.ts
 ```
 
-## Compile and run the project
+## ⚙️ Cấu hình
 
-```bash
-# development
-$ npm run start
+### **Environment Variables**
+```env
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/notification_db"
 
-# watch mode
-$ npm run start:dev
+# JWT
+JWT_SECRET="your-super-secret-jwt-key"
 
-# production mode
-$ npm run start:prod
+# Email
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USER=your-email@gmail.com
+MAIL_PASS=your-app-password
+
+# WebSocket
+FRONTEND_URL=http://localhost:3000
+
+# Application
+PORT=3001
 ```
 
-## Run tests
+## 🎯 API Endpoints
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+### **Basic CRUD**
+```typescript
+POST   /notifications              # Tạo notification
+GET    /notifications              # Lấy tất cả notifications
+GET    /notifications/:id          # Lấy notification theo ID
+PATCH  /notifications/:id          # Cập nhật notification
+DELETE /notifications/:id          # Xóa notification
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+### **User-specific**
+```typescript
+GET    /notifications/user/:userId           # Lấy notifications của user
+GET    /notifications/user/:userId/pending   # Lấy pending notifications
+POST   /notifications/mark-read/:id/:userId  # Đánh dấu đã đọc
+POST   /notifications/dismiss/:id/:userId    # Dismiss notification
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### **Convenience Methods**
+```typescript
+POST   /notifications/booking-confirmation   # Gửi booking confirmation
+POST   /notifications/payment-success       # Gửi payment success
+POST   /notifications/welcome               # Gửi welcome email
+POST   /notifications/test                  # Test notification
+```
 
-## Resources
+## 🔌 WebSocket Events
 
-Check out a few resources that may come in handy when working with NestJS:
+### **Client → Server**
+```typescript
+// Authenticate
+socket.emit('authenticate', { token: 'jwt-token' });
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+// Mark as read
+socket.emit('mark_as_read', { notificationId: 'notif-id' });
 
-## Support
+// Dismiss notification
+socket.emit('dismiss_notification', { notificationId: 'notif-id' });
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+// Get notifications
+socket.emit('get_notifications');
+```
 
-## Stay in touch
+### **Server → Client**
+```typescript
+// New notification
+socket.on('new_notification', (notification) => {
+  console.log('New notification:', notification);
+});
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+// Pending notifications
+socket.on('pending_notifications', (notifications) => {
+  console.log('Pending notifications:', notifications);
+});
 
-## License
+// Notification read confirmation
+socket.on('notification_read', (data) => {
+  console.log('Notification marked as read:', data);
+});
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## 📧 Email Templates
+
+### **Available Templates**
+- `notification.hbs` - General notification template
+- `welcome.hbs` - Welcome email template
+- `register.hbs` - Registration confirmation
+- `ticket.hbs` - Support ticket template
+
+### **Template Variables**
+```typescript
+{
+  title: string,
+  content: string,
+  type: NotificationType,
+  userId: string,
+  data: Record<string, any>,
+  currentYear: number,
+  appName: string,
+  supportEmail: string
+}
+```
+
+### **Custom Helpers**
+```handlebars
+{{formatCurrency amount "VND"}}     <!-- Format currency -->
+{{formatDate date "dd/MM/yyyy"}}   <!-- Format date -->
+{{formatPhone phone}}               <!-- Format phone -->
+{{if_eq a b}}                       <!-- Conditional -->
+{{truncate text 100}}               <!-- Truncate text -->
+```
+
+## 🚀 Sử dụng
+
+### **1. Gửi notification đơn giản**
+```typescript
+const results = await notificationService.create({
+  userId: 'user-123',
+  type: NotificationType.BOOKING_CONFIRMED,
+  title: 'Đặt phòng thành công',
+  content: 'Đặt phòng của bạn đã được xác nhận.',
+  channels: [
+    { type: ChannelType.EMAIL, recipient: 'user@example.com', template: 'notification' },
+    { type: ChannelType.WEBSOCKET, recipient: 'user-123' },
+  ],
+});
+```
+
+### **2. Gửi booking confirmation**
+```typescript
+const results = await notificationService.sendBookingConfirmation('user-123', {
+  bookingId: 'booking-456',
+  email: 'user@example.com',
+  amount: 500000,
+  roomName: 'Phòng 101',
+  startDate: new Date(),
+  endDate: new Date(),
+});
+```
+
+### **3. Gửi payment success**
+```typescript
+const results = await notificationService.sendPaymentSuccess('user-123', {
+  paymentId: 'payment-789',
+  email: 'user@example.com',
+  amount: 500000,
+  bookingId: 'booking-456',
+});
+```
+
+## 🧪 Testing
+
+### **Test notification**
+```bash
+curl -X POST http://localhost:3001/notifications/test \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "test-user",
+    "email": "test@example.com"
+  }'
+```
+
+### **WebSocket test**
+```javascript
+const socket = io('ws://localhost:3001/notifications', {
+  auth: { token: 'your-jwt-token' }
+});
+
+socket.on('new_notification', (notification) => {
+  console.log('Received:', notification);
+});
+```
+
+## 🔧 Development
+
+### **Start development server**
+```bash
+npm run start:dev
+```
+
+### **Build for production**
+```bash
+npm run build
+npm run start:prod
+```
+
+### **Run tests**
+```bash
+npm run test
+npm run test:e2e
+```
+
+## 📝 Logs
+
+Service sử dụng Winston logger với các levels:
+- `LOG` - General information
+- `WARN` - Warning messages
+- `ERROR` - Error messages
+
+## 🚨 Error Handling
+
+- Email failures được log và return error result
+- WebSocket connection failures được handle gracefully
+- Template rendering errors được catch và log
+- Database connection errors được handle
+
+## 🔄 Integration
+
+### **Với các services khác**
+- Nhận events từ Kafka
+- Gửi notifications qua RabbitMQ
+- Tích hợp với Auth Service cho JWT validation
+
+### **Với Frontend**
+- WebSocket connection cho real-time
+- REST API cho CRUD operations
+- Template rendering cho email content
