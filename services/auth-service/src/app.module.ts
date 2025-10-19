@@ -10,32 +10,6 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 
 @Module({
   imports: [
-    MailerModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        transport: {
-          host: configService.get<string>('MAIL_HOST'),
-          port: 465,
-          secure: true,
-          auth: {
-            user: configService.get<string>('MAIL_USER'),
-            pass: configService.get<string>('MAIL_PASS'),
-          },
-        },
-        defaults: {
-          from: '"No Reply" <modules@nestjs.com>',
-        },
-        template: {
-          dir: process.cwd() + '/src/common/mail/templates/',
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
-          },
-        },
-      }),
-      inject: [ConfigService],
-
-    }),
     ConfigModule.forRoot({ isGlobal: true }),
     JwtModule.register({
       publicKey: loadPublicKey(),

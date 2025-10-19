@@ -9,6 +9,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import jwtConfig from './config/jwt.config';
 import { JwtConfig } from './config/jwt.config';
+import { RabbitMQModule } from '@/messaging/rabbitmq/rabbitmq.module';
+import { RedisModule } from '@/messaging/redis/redis.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { JwtConfig } from './config/jwt.config';
         };
       },
     }),
+    RabbitMQModule,
+    RedisModule,
   ],
   controllers: [AuthController],
   providers: [
