@@ -32,7 +32,6 @@ import { PrismaModule } from '../prisma/prisma.module';
         transport: {
           host: configService.get<string>('MAIL_HOST') || 'smtp.gmail.com',
           port: configService.get<number>('MAIL_PORT') || 587,
-          secure: configService.get<boolean>('MAIL_SECURE') || false,
           auth: {
             user: configService.get<string>('MAIL_USER'),
             pass: configService.get<string>('MAIL_PASS'),

@@ -24,7 +24,6 @@ export class NotificationService implements INotificationService {
     private readonly webSocketService: WebSocketService,
     private readonly templateService: TemplateService,
     private readonly prisma: PrismaService,
-    @Inject(forwardRef(() => NotificationGateway))
     private readonly notificationGateway: NotificationGateway,
   ) {}
 
