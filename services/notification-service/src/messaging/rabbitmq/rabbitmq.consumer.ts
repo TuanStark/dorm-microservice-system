@@ -2,6 +2,7 @@ import { Controller, Logger, OnModuleInit } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { CreateNotificationDto } from '../../notification/dto/create-notification.dto';
 import { NotificationService } from '../../notification/notification.service';
+import { RabbitMQTopics } from './rabbitmq.topic';
 
 @Controller()
 export class RabbitMQConsumerController implements OnModuleInit {
@@ -11,7 +12,9 @@ export class RabbitMQConsumerController implements OnModuleInit {
 
   onModuleInit() {
     this.logger.log('🚀 RabbitMQ Consumer initialized successfully');
-    this.logger.log('📡 Listening for events: booking.created, booking.canceled');
+    this.logger.log('📡 Listening for events: booking.created, booking.canceled, create.user');
+    this.logger.log('🔗 Ready to receive messages from RabbitMQ');
+    this.logger.log('✅ Consumer is ready to process messages');
   }
 
   @EventPattern('booking.created')
@@ -59,4 +62,68 @@ export class RabbitMQConsumerController implements OnModuleInit {
       channel.nack(context.getMessage(), false, true);
     }
   }
+
+  @EventPattern(RabbitMQTopics.CREATE_NOTIFICATION)
+  async handleCreateNotification(@Payload() data: any, @Ctx() context: RmqContext) {
+    try {
+      this.logger.log(`Received create notification event: ${JSON.stringify(data)}`);
+      
+      // Create notification
+      await this.notificationService.create(data, data.userId);
+
+      const channel = context.getChannelRef();
+      channel.ack(context.getMessage());
+    } catch (error) {
+      this.logger.error(`Error processing create notification: ${error.message}`, error.stack);
+      const channel = context.getChannelRef();
+      channel.nack(context.getMessage(), false, true);
+    }
+  }
+
+  @EventPattern(RabbitMQTopics.SEND_NOTIFICATION)
+  async handleSendNotification(@Payload() data: any, @Ctx() context: RmqContext) {
+    try {
+      this.logger.log(`Received send notification event: ${JSON.stringify(data)}`);
+      
+      // Send notification
+      await this.notificationService.send(data);
+
+      const channel = context.getChannelRef();
+      channel.ack(context.getMessage());
+    } catch (error) {
+      this.logger.error(`Error processing send notification: ${error.message}`, error.stack);
+      const channel = context.getChannelRef();
+      channel.nack(context.getMessage(), false, true);
+    }
+  }
+
+  @EventPattern(RabbitMQTopics.CREATE_USER)
+  async handleCreateUser(@Payload() data: any, @Ctx() context: RmqContext) {
+    try {
+      this.logger.log(`🎯 CREATE_USER event received!`);
+      this.logger.log(`📦 Data: ${JSON.stringify(data)}`);
+      
+      // Check if required fields exist
+      if (!data.id) {
+        this.logger.error(`❌ Missing required field: id`);
+        throw new Error('Missing required field: id');
+      }
+      
+      this.logger.log(`👤 Processing user creation for ID: ${data.id}`);
+      
+      // Create user - use data.id as userId
+      const result = await this.notificationService.sendWelcomeEmail(data.id, data);
+      
+      this.logger.log(`✅ Welcome email sent successfully: ${JSON.stringify(result)}`);
+
+      const channel = context.getChannelRef();
+      channel.ack(context.getMessage());
+      
+      this.logger.log(`✅ Message acknowledged successfully`);
+    } catch (error) {
+      this.logger.error(`❌ Error processing create user: ${error.message}`, error.stack);
+      const channel = context.getChannelRef();
+      channel.nack(context.getMessage(), false, true);
+    }
+  } 
 }

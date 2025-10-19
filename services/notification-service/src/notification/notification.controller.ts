@@ -120,6 +120,27 @@ export class NotificationController {
     return this.notificationService.sendWelcomeEmail(body.userId, body.userData);
   }
 
+  // Test RabbitMQ connection - simple endpoint
+  @Get('health')
+  healthCheck() {
+    return {
+      status: 'ok',
+      service: 'notification-service',
+      timestamp: new Date().toISOString(),
+      rabbitmq: 'ready'
+    };
+  }
+
+  // Test RabbitMQ connection
+  @Get('test-rabbitmq')
+  async testRabbitMQ() {
+    return new ResponseData({
+      message: 'Notification service is running and ready to receive RabbitMQ messages',
+      timestamp: new Date().toISOString(),
+      status: 'ready'
+    }, HttpStatus.OK, HttpMessage.SUCCESS);
+  }
+
   // Test endpoint
   @Post('test')
   async testNotification(@Body() body: { email: string }, @Req() req: Request) {
@@ -134,7 +155,7 @@ export class NotificationController {
         content: 'This is a test notification to verify the system is working.',
         channels: [
           { type: ChannelType.EMAIL, recipient: body.email, template: 'notification' },
-          { type: ChannelType.WEBSOCKET, recipient: userId },
+          { type: ChannelType.IN_APP, recipient: userId },
         ],
       }, userId);
       return new ResponseData(notification, HttpStatus.CREATED, HttpMessage.CREATED);

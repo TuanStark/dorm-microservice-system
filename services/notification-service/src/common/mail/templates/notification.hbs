@@ -102,6 +102,13 @@
             </div>
             {{/if}}
             
+            {{#if codeId}}
+            <div class="booking-info">
+                <strong>Mã xác thực:</strong> {{codeId}}<br>
+                {{#if codeExpired}}<strong>Hết hạn lúc:</strong> {{formatDate codeExpired}}<br>{{/if}}
+            </div>
+            {{/if}}
+            
             {{#if actionUrl}}
             <div style="text-align: center;">
                 <a href="{{actionUrl}}" class="button">Xem chi tiết</a>

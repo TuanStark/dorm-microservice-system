@@ -9,7 +9,7 @@ export class AuthDTO {
   password: string;
 
   @IsString({ message: 'Tên đầy đủ phải là chuỗi' })
-  fullName: string;
+  name: string;
 }
 
 export class LoginDTO {

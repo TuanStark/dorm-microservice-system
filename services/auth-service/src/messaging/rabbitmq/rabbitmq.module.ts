@@ -13,7 +13,7 @@ import { RabbitMQProducerService } from './rabbitmq.producer.service';
         useFactory: (configService: ConfigService) => {
           const logger = new Logger('RabbitMQModule');
           const rabbitmqUrl = configService.get<string>('RABBITMQ_URL') || 'amqp://localhost:5672';
-          const queue = configService.get<string>('RABBITMQ_QUEUE') || 'booking.payments';
+          const queue = configService.get<string>('RABBITMQ_QUEUE') || 'notification_queue';
           
           logger.log(`🔗 Connecting to RabbitMQ: ${rabbitmqUrl}`);
           logger.log(`📨 Queue: ${queue}`);
@@ -24,8 +24,8 @@ import { RabbitMQProducerService } from './rabbitmq.producer.service';
               urls: [rabbitmqUrl],
               queue: queue,
               queueOptions: { durable: true },
-              noAck: false,
-              prefetchCount: 1,
+              noAck: true,
+              prefetchCount: 0,
             },
           };
         },

@@ -1,7 +1,8 @@
 // src/notification/dto/create-notification.dto.ts
 import { IsString, IsEnum, IsArray, IsOptional, IsObject, IsDateString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { NotificationType, ChannelType, NotificationPriority } from '../interfaces/notification.interface';
+import { NotificationPriority } from '../interfaces/notification.interface';
+import { NotificationType, ChannelType } from '@prisma/client';
 
 export class NotificationChannelDto {
   @IsEnum(ChannelType)

@@ -174,7 +174,7 @@ Content-Type: application/json
 {
   "email": "user1@example.com",
   "password": "123456",
-  "fullName": "User One"
+  "name": "User One"
 }
 ```
 

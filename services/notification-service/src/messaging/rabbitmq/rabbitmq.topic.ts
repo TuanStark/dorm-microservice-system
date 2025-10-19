@@ -1,5 +1,5 @@
 export enum RabbitMQTopics {
-    // Booking events
+    // User events
     CREATE_USER = 'create.user',
     RESEND_VERIFICATION_CODE = 'resend.verification.code',
     

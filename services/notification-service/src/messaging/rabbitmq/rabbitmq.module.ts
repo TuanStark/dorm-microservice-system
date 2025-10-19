@@ -1,13 +1,14 @@
-import { Module, Logger } from '@nestjs/common';
+import { Module, Logger, forwardRef } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { RabbitMQProducerService } from './rabbitmq.producer.service';
+import { RabbitMQConsumerController } from './rabbitmq.consumer';
 import { NotificationModule } from '../../notification/notification.module';
 
 @Module({
   imports: [
-    NotificationModule,
     ConfigModule,
+    forwardRef(() => NotificationModule),
     ClientsModule.registerAsync([
       {
         name: 'RABBITMQ_CLIENT',
@@ -15,7 +16,7 @@ import { NotificationModule } from '../../notification/notification.module';
         useFactory: (configService: ConfigService) => {
           const logger = new Logger('RabbitMQModule');
           const rabbitmqUrl = configService.get<string>('RABBITMQ_URL') || 'amqp://localhost:5672';
-          const queue = configService.get<string>('RABBITMQ_QUEUE') || 'booking.payments';
+          const queue = configService.get<string>('RABBITMQ_QUEUE') || 'notification_queue';
           
           logger.log(`🔗 Connecting to RabbitMQ: ${rabbitmqUrl}`);
           logger.log(`📨 Queue: ${queue}`);
@@ -26,8 +27,8 @@ import { NotificationModule } from '../../notification/notification.module';
               urls: [rabbitmqUrl],
               queue: queue,
               queueOptions: { durable: true },
-              noAck: false,
-              prefetchCount: 1,
+              noAck: true,
+              prefetchCount: 0,
             },
           };
         },
@@ -35,6 +36,7 @@ import { NotificationModule } from '../../notification/notification.module';
       },
     ]),
   ],
+  controllers: [RabbitMQConsumerController],
   providers: [RabbitMQProducerService],
   exports: [RabbitMQProducerService],
 })

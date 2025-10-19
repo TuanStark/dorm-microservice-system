@@ -2,6 +2,7 @@ import { Module, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { NotificationModule } from './notification/notification.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RabbitMQModule } from './messaging/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { PrismaModule } from './prisma/prisma.module';
     }),
     PrismaModule,
     NotificationModule,
+    RabbitMQModule,
   ],
   controllers: [],
   providers: [],

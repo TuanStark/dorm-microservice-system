@@ -57,25 +57,25 @@ export interface ITemplateService {
 }
 
 export enum NotificationType {
-  BOOKING_CREATED = 'booking.created',
-  BOOKING_CONFIRMED = 'booking.confirmed',
-  BOOKING_CANCELED = 'booking.canceled',
-  PAYMENT_SUCCESS = 'payment.success',
-  PAYMENT_FAILED = 'payment.failed',
-  PAYMENT_REFUNDED = 'payment.refunded',
-  ROOM_DELETED = 'room.deleted',
-  ROOM_UPDATED = 'room.updated',
-  SYSTEM_MAINTENANCE = 'system.maintenance',
-  WELCOME = 'welcome',
-  REMINDER = 'reminder',
+  BOOKING_CREATED = 'BOOKING_CREATED',
+  BOOKING_CONFIRMED = 'BOOKING_CONFIRMED',
+  BOOKING_CANCELED = 'BOOKING_CANCELED',
+  PAYMENT_SUCCESS = 'PAYMENT_SUCCESS',
+  PAYMENT_FAILED = 'PAYMENT_FAILED',
+  PAYMENT_REFUNDED = 'PAYMENT_REFUNDED',
+  ROOM_DELETED = 'ROOM_DELETED',
+  ROOM_UPDATED = 'ROOM_UPDATED',
+  SYSTEM_MAINTENANCE = 'SYSTEM_MAINTENANCE',
+  WELCOME = 'WELCOME',
+  REMINDER = 'REMINDER',
 }
 
 export enum ChannelType {
-  EMAIL = 'email',
-  WEBSOCKET = 'websocket',
-  SMS = 'sms',
-  PUSH = 'push',
-  IN_APP = 'in_app',
+  EMAIL = 'EMAIL',
+  WEBSOCKET = 'WEBSOCKET',
+  SMS = 'SMS',
+  PUSH = 'PUSH',
+  IN_APP = 'IN_APP',
 }
 
 export enum NotificationPriority {
@@ -86,11 +86,11 @@ export enum NotificationPriority {
 }
 
 export enum NotificationStatus {
-  PENDING = 'pending',
-  SENT = 'sent',
-  DELIVERED = 'delivered',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
+  PENDING = 'PENDING',
+  SENT = 'SENT',
+  DELIVERED = 'DELIVERED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
 }
 
 export type NotificationChannel = {

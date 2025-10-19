@@ -13,27 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model NotificationPreferences {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  
-  // Channel preferences
-  emailEnabled    Boolean @default(true)
-  smsEnabled      Boolean @default(false)
-  pushEnabled     Boolean @default(true)
-  
-  // Notification types
-  bookingNotifications    Boolean @default(true)
-  paymentNotifications    Boolean @default(true)
-  roomNotifications       Boolean @default(true)
-  systemNotifications     Boolean @default(true)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@map("notification_preferences")
-}
-
 model Notification {
   id          String   @id @default(uuid())
   userId      String
@@ -45,7 +24,7 @@ model Notification {
   
   // Delivery status
   status      NotificationStatus @default(PENDING)
-  channels    NotificationChannel[]
+  channels    Json?
   
   // Timestamps
   scheduledAt DateTime?
@@ -58,54 +37,6 @@ model Notification {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
-}
-
-model NotificationChannel {
-  id             String   @id @default(uuid())
-  notificationId String
-  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
-  
-  channel        ChannelType
-  status         ChannelStatus @default(PENDING)
-  
-  // Delivery details
-  recipient      String   // email, phone, device token
-  subject        String?  // for email
-  templateId     String?
-  
-  // Delivery tracking
-  sentAt         DateTime?
-  deliveredAt    DateTime?
-  failedAt       DateTime?
-  errorMessage   String?
-  retryCount     Int      @default(0)
-  
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
-  @@map("notification_channels")
-  @@index([notificationId])
-  @@index([status])
-}
-
-model NotificationTemplate {
-  id        String   @id @default(uuid())
-  type      NotificationType
-  channel   ChannelType
-  
-  // Template content
-  subject   String?
-  content   String
-  variables Json     // Template variables
-  
-  // Status
-  active    Boolean  @default(true)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@map("notification_templates")
-  @@unique([type, channel])
 }
 
 // Enums

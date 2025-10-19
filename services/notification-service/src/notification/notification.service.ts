@@ -5,10 +5,9 @@ import {
   INotificationService, 
   INotificationData, 
   INotificationResult, 
-  NotificationType,
-  ChannelType,
-  NotificationStatus 
+  NotificationStatus
 } from './interfaces/notification.interface';
+import { NotificationType, ChannelType, ChannelStatus } from '@prisma/client';
 import { EmailService } from './services/email.service';
 import { WebSocketService } from './services/websocket.service';
 import { TemplateService } from './services/template.service';
@@ -62,24 +61,13 @@ export class NotificationService implements INotificationService {
       const notification = await this.prisma.notification.create({
         data: {
           userId: userId,
-          type: createNotificationDto.type as any,
+          type: createNotificationDto.type,
           title: createNotificationDto.title,
           content: createNotificationDto.content,
           data: createNotificationDto.data,
-          status: 'PENDING' as any,
+          status: NotificationStatus.PENDING,
           scheduledAt: createNotificationDto.scheduledAt ? new Date(createNotificationDto.scheduledAt) : null,
-          channels: {
-            create: createNotificationDto.channels.map(channel => ({
-              channel: channel.type as any,
-              recipient: channel.recipient,
-              subject: channel.subject,
-              templateId: channel.template,
-              status: 'PENDING',
-            })),
-          },
-        },
-        include: {
-          channels: true,
+          channels: createNotificationDto.channels as any,
         },
       });
 
@@ -93,12 +81,7 @@ export class NotificationService implements INotificationService {
         title: notification.title,
         content: notification.content,
         data: notification.data as any,
-        channels: (notification as any).channels.map(ch => ({
-          type: ch.channel as any,
-          recipient: ch.recipient,
-          subject: ch.subject ?? undefined,
-          template: ch.templateId ?? undefined,
-        })),
+        channels: notification.channels as any,
         priority: createNotificationDto.priority,
         scheduledAt: notification.scheduledAt ?? undefined,
         expiresAt: createNotificationDto.expiresAt ? new Date(createNotificationDto.expiresAt) : undefined,
@@ -107,28 +90,12 @@ export class NotificationService implements INotificationService {
       // Send notification
       const results = await this.send(notificationData);
 
-      // Update channel statuses in database
-      for (const result of results) {
-        const channel = (notification as any).channels.find(ch => ch.channel === result.channel);
-        if (channel) {
-          await this.prisma.notificationChannel.update({
-            where: { id: channel.id },
-            data: {
-              status: result.success ? 'SENT' : 'FAILED',
-              sentAt: result.success ? new Date() : null,
-              failedAt: result.success ? null : new Date(),
-              errorMessage: result.error,
-            },
-          });
-        }
-      }
-
       // Update notification status
       const allSuccessful = results.every(r => r.success);
       await this.prisma.notification.update({
         where: { id: notification.id },
         data: {
-          status: allSuccessful ? 'SENT' : 'FAILED' as any,
+          status: allSuccessful ? NotificationStatus.SENT : NotificationStatus.FAILED,
           sentAt: allSuccessful ? new Date() : null,
         },
       });
@@ -143,9 +110,6 @@ export class NotificationService implements INotificationService {
   async findAll(): Promise<INotificationData[]> {
     try {
       const notifications = await this.prisma.notification.findMany({
-        include: {
-          channels: true,
-        },
         orderBy: {
           createdAt: 'desc',
         },
@@ -158,12 +122,7 @@ export class NotificationService implements INotificationService {
         title: notification.title,
         content: notification.content,
         data: notification.data as any,
-        channels: (notification as any).channels.map(ch => ({
-          type: ch.channel as any,
-          recipient: ch.recipient,
-          subject: ch.subject ?? undefined,
-          template: ch.templateId ?? undefined,
-        })),
+        channels: notification.channels as any,
         scheduledAt: notification.scheduledAt ?? undefined,
         expiresAt: undefined,
       }));
@@ -177,9 +136,6 @@ export class NotificationService implements INotificationService {
     try {
       const notification = await this.prisma.notification.findUnique({
         where: { id },
-        include: {
-          channels: true,
-        },
       });
 
       if (!notification) {
@@ -193,12 +149,7 @@ export class NotificationService implements INotificationService {
         title: notification.title,
         content: notification.content,
         data: notification.data as any,
-        channels: (notification as any).channels.map(ch => ({
-          type: ch.channel as any,
-          recipient: ch.recipient,
-          subject: ch.subject ?? undefined,
-          template: ch.templateId ?? undefined,
-        })),
+        channels: notification.channels as any,
         scheduledAt: notification.scheduledAt ?? undefined,
         expiresAt: undefined,
       };
@@ -218,9 +169,6 @@ export class NotificationService implements INotificationService {
           ...(updateNotificationDto.data && { data: updateNotificationDto.data }),
           ...(updateNotificationDto.scheduledAt && { scheduledAt: new Date(updateNotificationDto.scheduledAt) }),
         },
-        include: {
-          channels: true,
-        },
       });
 
       return {
@@ -230,12 +178,7 @@ export class NotificationService implements INotificationService {
         title: notification.title,
         content: notification.content,
         data: notification.data as any,
-        channels: (notification as any).channels.map(ch => ({
-          type: ch.channel as any,
-          recipient: ch.recipient,
-          subject: ch.subject ?? undefined,
-          template: ch.templateId ?? undefined,
-        })),
+        channels: notification.channels as any,
         scheduledAt: notification.scheduledAt ?? undefined,
         expiresAt: undefined,
       };
@@ -261,9 +204,6 @@ export class NotificationService implements INotificationService {
     try {
       const notifications = await this.prisma.notification.findMany({
         where: { userId },
-        include: {
-          channels: true,
-        },
         orderBy: {
           createdAt: 'desc',
         },
@@ -276,12 +216,7 @@ export class NotificationService implements INotificationService {
         title: notification.title,
         content: notification.content,
         data: notification.data as any,
-        channels: (notification as any).channels.map(ch => ({
-          type: ch.channel as any,
-          recipient: ch.recipient,
-          subject: ch.subject ?? undefined,
-          template: ch.templateId ?? undefined,
-        })),
+        channels: notification.channels as any,
         scheduledAt: notification.scheduledAt ?? undefined,
         expiresAt: undefined,
       }));
@@ -296,10 +231,7 @@ export class NotificationService implements INotificationService {
       const notifications = await this.prisma.notification.findMany({
         where: { 
           userId,
-          status: NotificationStatus.PENDING as any,
-        },
-        include: {
-          channels: true,
+          status: NotificationStatus.PENDING,
         },
         orderBy: {
           createdAt: 'desc',
@@ -313,12 +245,7 @@ export class NotificationService implements INotificationService {
         title: notification.title,
         content: notification.content,
         data: notification.data as any,
-        channels: (notification as any).channels.map(ch => ({
-          type: ch.channel as any,
-          recipient: ch.recipient,
-          subject: ch.subject ?? undefined,
-          template: ch.templateId ?? undefined,
-        })),
+        channels: notification.channels as any,
         scheduledAt: notification.scheduledAt ?? undefined,
       }));
     } catch (error) {
@@ -353,7 +280,7 @@ export class NotificationService implements INotificationService {
           userId, // Ensure user can only dismiss their own notifications
         },
         data: { 
-          status: 'CANCELLED' as any,
+          status: NotificationStatus.CANCELLED,
         },
       });
       return true;
@@ -372,7 +299,7 @@ export class NotificationService implements INotificationService {
       data: bookingData,
       channels: [
         { type: ChannelType.EMAIL, recipient: bookingData.email, template: 'notification' },
-        { type: ChannelType.WEBSOCKET, recipient: userId },
+        { type: ChannelType.IN_APP, recipient: userId },
       ],
     }, userId);
   }
@@ -385,7 +312,7 @@ export class NotificationService implements INotificationService {
       data: paymentData,
       channels: [
         { type: ChannelType.EMAIL, recipient: paymentData.email, template: 'notification' },
-        { type: ChannelType.WEBSOCKET, recipient: userId },
+        { type: ChannelType.IN_APP, recipient: userId },
       ],
     }, userId);
   }
@@ -394,11 +321,15 @@ export class NotificationService implements INotificationService {
     return this.create({
       type: NotificationType.WELCOME,
       title: 'Chào mừng đến với Dorm Booking System',
-      content: `Chào mừng ${userData.name}! Cảm ơn bạn đã đăng ký tài khoản.`,
-      data: userData,
+      content: `Chào mừng ${userData.name || 'bạn'}! Cảm ơn bạn đã đăng ký tài khoản.`,
+      data: {
+        ...userData,
+        codeId: userData.codeId,
+        codeExpired: userData.codeExpired,
+      },
       channels: [
-        { type: ChannelType.EMAIL, recipient: userData.email, template: 'welcome' },
-        { type: ChannelType.WEBSOCKET, recipient: userId },
+        { type: ChannelType.EMAIL, recipient: userData.email, template: 'notification' },
+        { type: ChannelType.IN_APP, recipient: userId },
       ],
     }, userId);
   }
@@ -408,7 +339,7 @@ export class NotificationService implements INotificationService {
       case ChannelType.EMAIL:
         return this.sendEmailNotification(notification, channel);
       
-      case ChannelType.WEBSOCKET:
+      case ChannelType.IN_APP:
         return this.sendWebSocketNotification(notification, channel);
       
       default:
@@ -443,7 +374,7 @@ export class NotificationService implements INotificationService {
       this.logger.error(`Email notification failed: ${error.message}`, error.stack);
       return {
         success: false,
-        channel: ChannelType.EMAIL,
+        channel: 'EMAIL' as any,
         error: error.message,
       };
     }
@@ -471,7 +402,7 @@ export class NotificationService implements INotificationService {
       this.logger.error(`WebSocket notification failed: ${error.message}`, error.stack);
       return {
         success: false,
-        channel: ChannelType.WEBSOCKET,
+        channel: 'IN_APP' as any,
         error: error.message,
       };
     }

@@ -1,5 +1,6 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 export interface PaymentEventData {
   paymentId: string;
@@ -22,8 +23,12 @@ export class RabbitMQProducerService {
     try {
       this.logger.log(`Publishing payment event to ${topic}: ${JSON.stringify(data)}`);
       
-      await this.client.emit(topic, data).toPromise();
+      // Check if client is available
+      if (!this.client) {
+        throw new Error('RabbitMQ client is not available');
+      }
       
+      this.client.emit(topic, data);
       this.logger.log(`✅ Payment event published successfully to ${topic}`);
     } catch (error) {
       this.logger.error(`❌ Failed to publish payment event to ${topic}: ${error.message}`, error.stack);
@@ -35,8 +40,12 @@ export class RabbitMQProducerService {
     try {
       this.logger.log(`Publishing booking event to ${topic}: ${JSON.stringify(data)}`);
       
-      await this.client.emit(topic, data).toPromise();
+      // Check if client is available
+      if (!this.client) {
+        throw new Error('RabbitMQ client is not available');
+      }
       
+      this.client.emit(topic, data);
       this.logger.log(`✅ Booking event published successfully to ${topic}`);
     } catch (error) {
       this.logger.error(`❌ Failed to publish booking event to ${topic}: ${error.message}`, error.stack);

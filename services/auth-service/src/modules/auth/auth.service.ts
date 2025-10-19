@@ -27,7 +27,7 @@ export class AuthService {
   ) { }
 
   async register(dto: AuthDTO) {
-    const { email, password, fullName } = dto;
+    const { email, password, name } = dto;
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
@@ -44,7 +44,7 @@ export class AuthService {
         data: {
           email,
           password: hash,
-          name: fullName || '',
+          name: name || '',
           roleId: 'cb8d828d-c0b9-460f-8b30-f7de4152e84f',
           status: "unactive",
           codeId: codeId,
@@ -55,7 +55,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         password: user.password,
-        fullName: fullName || '',
+        name: name || '',
         roleId: user.roleId || 'cb8d828d-c0b9-460f-8b30-f7de4152e84f',
         codeId: user.codeId || '',
         codeExpired: user.codeExpired || dayjs().add(1, 'minute').toDate(),
@@ -210,7 +210,7 @@ export class AuthService {
 
     // Tạo mã xác thực mới
     const newCodeId = uuidv4();
-    const newCodeExpired = dayjs().add(1, 'minute').toDate();
+    const newCodeExpired = dayjs().add(10, 'minute').toDate();
 
     // Cập nhật mã xác thực mới
     await this.prisma.user.update({
@@ -226,7 +226,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       password: user.password,
-      fullName: user.name || '',
+      name: user.name || '',
       roleId: user.roleId,
       codeId: newCodeId,
       codeExpired: newCodeExpired,
