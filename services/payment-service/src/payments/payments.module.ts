@@ -4,14 +4,15 @@ import { PaymentsService } from './payments.service';
 import { VietqrProvider } from './provider/vietqr.provider';
 import { EmailWatcherService } from '../email-watcher/email-watcher.service';
 import { ScheduleModule } from '@nestjs/schedule';
-import { KafkaModule } from 'src/kafka/kafka.module';
+import { RabbitMQModule } from 'src/messaging/rabbitmq/rabbitmq.module';
+import { RabbitMQConsumerController } from '../messaging/rabbitmq/rabbitmq.consumer';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(), 
-    forwardRef(() => KafkaModule),
+    forwardRef(() => RabbitMQModule),
   ],
-  controllers: [PaymentsController],
+  controllers: [PaymentsController, RabbitMQConsumerController],
   providers: [PaymentsService, VietqrProvider, EmailWatcherService],
   exports: [PaymentsService],
 })

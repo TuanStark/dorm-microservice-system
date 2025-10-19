@@ -4,13 +4,13 @@ import { EmailWatcherService } from './email-watcher.service';
 import { EmailWatcherCron } from './email-watcher.cron';
 import { PaymentsModule } from '../payments/payments.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { KafkaModule } from 'src/kafka/kafka.module';
+import { RabbitMQModule } from 'src/messaging/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     PaymentsModule,
-    KafkaModule,
+    RabbitMQModule,
   ],
   providers: [EmailWatcherService, EmailWatcherCron],
 })

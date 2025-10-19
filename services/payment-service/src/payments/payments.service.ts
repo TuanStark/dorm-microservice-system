@@ -1,9 +1,8 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaClient, PaymentStatus, PaymentMethod } from '@prisma/client';
 import { VietqrProvider } from './provider/vietqr.provider';
-import { KafkaProducerService } from '../kafka/kafka.producer.service';
-import { KafkaTopics } from 'src/kafka/kafka-topics.enum';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { RabbitMQProducerService } from 'src/messaging/rabbitmq/rabbitmq.producer.service';
 
 @Injectable()
 export class PaymentsService {
@@ -12,7 +11,7 @@ export class PaymentsService {
 
   constructor(
     private readonly vietqr: VietqrProvider,
-    private readonly kafka: KafkaProducerService,
+    private readonly rabbitmq: RabbitMQProducerService,
   ) {}
 
   private providerFor(method: PaymentMethod | string) {
@@ -22,6 +21,10 @@ export class PaymentsService {
 
   // create payment and return record + qr url
   async createPayment(userId: string, dto: CreatePaymentDto) {
+    if (!dto.bookingId || !dto.amount || !dto.method) {
+      throw new BadRequestException('Missing required fields: bookingId, amount, method');
+    }
+    
     const provider = this.providerFor(dto.method);
     const { qrImageUrl, paymentUrl, reference } = await provider.createPayment({
       amount: dto.amount,
@@ -35,9 +38,9 @@ export class PaymentsService {
         bookingId: dto.bookingId,
         amount: dto.amount,
         method: dto.method as PaymentMethod,
-        qrImageUrl,
-        paymentUrl,
-        reference,
+        qrImageUrl: qrImageUrl || undefined,
+        paymentUrl: paymentUrl || undefined,
+        reference: reference || undefined,
         status: PaymentStatus.PENDING,
       },
     });
@@ -46,7 +49,7 @@ export class PaymentsService {
     return payment;
   }
 
-  // update status and publish kafka
+  // update status and publish rabbitmq
   async updateStatusByPaymentId(paymentId: string, status: PaymentStatus, transactionId?: string) {
     const payment = await this.prisma.payment.update({
       where: { id: paymentId },
@@ -58,13 +61,13 @@ export class PaymentsService {
     });
 
     const topic = status === PaymentStatus.SUCCESS ? 'payment.success' : 'payment.failed';
-    await this.kafka.emitPaymentEvent(topic, {
+    await this.rabbitmq.emitPaymentEvent(topic, {
       paymentId: payment.id,
       bookingId: payment.bookingId,
       amount: payment.amount,
       status: payment.status,
-      transactionId: payment.transactionId,
-      reference: payment.reference,
+      transactionId: payment.transactionId || undefined,
+      reference: payment.reference || undefined,
     });
 
     this.logger.log(`Payment ${paymentId} => ${status}, published ${topic}`);
@@ -91,10 +94,12 @@ export class PaymentsService {
       },
     });
 
-    await this.kafka.emitPaymentEvent(KafkaTopics.PAYMENT_STATUS_UPDATED, {
+    await this.rabbitmq.emitPaymentEvent('payment.status.updated', {
+      paymentId: payment.id,
       bookingId: payment.bookingId,
-      status: 'SUCCESS',
       amount,
+      status: 'SUCCESS',
+      reference: payment.reference || undefined,
     });
 
     this.logger.log(`✅ Payment verified for booking ${bookingId}, event pushed.`);
