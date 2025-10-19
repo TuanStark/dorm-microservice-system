@@ -2,13 +2,11 @@ import { Module, forwardRef } from '@nestjs/common';
 import { BookingService } from './bookings.service';
 import { BookingController } from './bookings.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
-import { KafkaModule } from '../../messaging/kafka/kafka.module';
 import { RabbitMQModule } from '../../messaging/rabbitmq/rabbitmq.module';
 import { RedisModule } from '../../messaging/redis/redis.module';
 
 @Module({
   imports: [
-    forwardRef(() => KafkaModule), // ✅ Fix circular dependency
     forwardRef(() => RabbitMQModule), // ✅ Fix circular dependency
     PrismaModule,
     RedisModule,
