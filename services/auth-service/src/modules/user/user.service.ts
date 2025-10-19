@@ -3,13 +3,11 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FindAllDto } from 'src/common/global/find-all.dto';
-import { CloudinaryService } from 'src/modules/cloudinary/cloudinary.service';
 import * as argon from 'argon2';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService,
-    private cloudinaryService: CloudinaryService
   ) { }
 
   async create(createUserDto: CreateUserDto) {
@@ -120,20 +118,11 @@ export class UserService {
 
       if (file) {
         try {
-          const avatar = await this.cloudinaryService.updateImage(file, existingUser.avatar);
-          if (avatar) {
-            const updatedUsers = await this.prisma.user.update({
-              where: { id: updatedUser.id },
-              data: { avatar: avatar.secure_url },
-            });
-            return updatedUsers;
-          }
-        } catch (uploadError) {
-          throw new BadRequestException(`Failed to upload logo: ${uploadError.message}`);
+          return updatedUser;
+        } catch (error) {
+          throw new BadRequestException(`Failed to update user: ${error.message}`);
         }
       }
-
-      return updatedUser;
     } catch (error) {
       throw new BadRequestException(`Failed to update user: ${error.message}`);
     }
