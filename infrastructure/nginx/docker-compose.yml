@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: booking_nginx
+    restart: always
+    volumes:
+      # Thư mục chứa các file cấu hình site (VD: default.conf)
+      - ./conf.d:/etc/nginx/conf.d:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - my_custom_network
+
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  my_custom_network:
+    external: true

@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: booking_jenkins
+    user: root
+    ports:
+      - "8081:8080"   # Jenkins UI
+      - "50000:50000" # JNLP agents
+    environment:
+      - JAVA_OPTS=-Xmx1g
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      # If your Docker Desktop supports it, this lets Jenkins run docker builds.
+      # On some Windows setups this mount may not be available; you can remove it if not needed.
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    networks:
+      my_custom_network:
+        ipv4_address: ${APP_IP}
+
+volumes:
+  jenkins_home:
+
+networks:
+  my_custom_network:
+    external: true
+
+
