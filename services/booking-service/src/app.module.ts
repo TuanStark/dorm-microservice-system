@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { PrismaService } from './prisma/prisma.service';
 import { RabbitMQModule } from './messaging/rabbitmq/rabbitmq.module';
+import { KafkaModule } from './messaging/kafka/kafka.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { RabbitMQModule } from './messaging/rabbitmq/rabbitmq.module';
     PrismaModule,
     BookingsModule,
     RabbitMQModule,
+    KafkaModule,
   ],
   controllers: [],
   providers: [PrismaService],

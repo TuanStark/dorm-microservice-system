@@ -32,7 +32,7 @@ model Room {
   bedCount    Int           @default(1)
   bathroomCount Int           @default(1)
   floor         Int           @default(1)
-  countCapacity Int           @default(1)
+  countCapacity Int           @default(0)
   status      RoomStatus    @default(AVAILABLE)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt

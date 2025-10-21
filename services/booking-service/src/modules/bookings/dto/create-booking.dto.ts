@@ -21,12 +21,14 @@ class BookingDetailItem {
 export class CreateBookingDto {
 
   @IsUUID()
+  @IsOptional()
   id: string;
 
   @IsEnum(BookingStatus)
   status: BookingStatus;
 
   @IsUUID()
+  @IsOptional()
   userId: string;
 
   @IsDateString()

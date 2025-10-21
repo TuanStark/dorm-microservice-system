@@ -1,5 +1,6 @@
 import { Type, Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, IsArray } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, IsArray, IsEnum } from 'class-validator';
+import { RoomStatus } from '@prisma/client';
 
 export class CreateRoomDto {
     @IsString()
@@ -37,4 +38,13 @@ export class CreateRoomDto {
         return value;
     })
     amenities?: string[];
+
+    @IsEnum(RoomStatus)
+    @IsOptional()
+    status?: RoomStatus;
+
+    @IsNumber()
+    @IsOptional()
+    @Type(() => Number)
+    countCapacity?: number;
 }

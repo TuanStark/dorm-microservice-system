@@ -174,6 +174,8 @@ export class RoomsService {
         name: updateRoomDto.name,
         price: updateRoomDto.price,
         capacity: updateRoomDto.capacity,
+        countCapacity: updateRoomDto.countCapacity,
+        status: RoomStatus.AVAILABLE,
       },
     });
 

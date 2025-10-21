@@ -30,11 +30,7 @@ export class KafkaConsumerService implements OnModuleInit {
       // Booking events
       await this.consumer.subscribe({ topic: KafkaTopics.BOOKING_CREATED });
       await this.consumer.subscribe({ topic: KafkaTopics.BOOKING_CANCELED });
-      
-      // Payment events
-      await this.consumer.subscribe({ topic: KafkaTopics.PAYMENT_SUCCESS });
-      await this.consumer.subscribe({ topic: KafkaTopics.PAYMENT_FAILED });
-      await this.consumer.subscribe({ topic: KafkaTopics.PAYMENT_REFUNDED });
+      // await this.consumer.subscribe({ topic: KafkaTopics.BOOKING_SUCCESS });
       
       await this.run();
     } catch (error) {
@@ -57,18 +53,7 @@ export class KafkaConsumerService implements OnModuleInit {
           case KafkaTopics.BOOKING_CANCELED:
             await this.handleBookingCanceled(data);
             break;
-            
-          // Payment events
-          case KafkaTopics.PAYMENT_SUCCESS:
-            await this.handlePaymentSuccess(data);
-            break;
-          case KafkaTopics.PAYMENT_FAILED:
-            await this.handlePaymentFailed(data);
-            break;
-          case KafkaTopics.PAYMENT_REFUNDED:
-            await this.handlePaymentRefunded(data);
-            break;
-            
+
           default:
             console.warn(`Unhandled topic: ${topic}`);
         }
@@ -83,30 +68,51 @@ export class KafkaConsumerService implements OnModuleInit {
     console.log('📩 [Kafka] Booking created event received:', data);
     
     try {
-      const { roomId, bookingId, userId, startDate, endDate } = data;
+      const { bookingId, userId, startDate, endDate, details } = data;
       
-      if (!roomId) {
-        console.warn('⚠️ No roomId in booking created event');
+      if (!details || !Array.isArray(details) || details.length === 0) {
+        console.warn('⚠️ No room details in booking created event');
         return;
       }
 
-      // Kiểm tra room có tồn tại không
-      const room = await this.roomsService.getRoomById(roomId);
-      if (!room) {
-        console.error(`❌ Room ${roomId} not found`);
-        return;
-      }
+      // Process each room in the booking
+      for (const detail of details) {
+        const { roomId, price, time } = detail;
+        
+        if (!roomId) {
+          console.warn('⚠️ No roomId in booking detail');
+          continue;
+        }
 
-      // Kiểm tra room có available không
-      if (room.status !== RoomStatus.AVAILABLE) {
-        console.warn(`⚠️ Room ${roomId} is not available (status: ${room.status})`);
-        return;
-      }
+        // Kiểm tra room có tồn tại không
+        const room = await this.roomsService.getRoomById(roomId);
+        if (!room) {
+          console.error(`❌ Room ${roomId} not found`);
+          continue;
+        }
 
-      // Đổi status room từ AVAILABLE -> BOOKED
-      await this.roomsService.updateRoomStatus(roomId, RoomStatus.BOOKED);
-      
-      console.log(`✅ Room ${roomId} status updated to BOOKED for booking ${bookingId}`);
+        // Kiểm tra room có available không
+        if (room.status !== RoomStatus.AVAILABLE) {
+          console.warn(`⚠️ Room ${roomId} is not available (status: ${room.status})`);
+          continue;
+        }
+
+        
+        if(room.countCapacity >= room.capacity) {
+          await this.roomsService.update(roomId, { 
+            status: RoomStatus.BOOKED, 
+          });
+          console.log(`✅ Room ${roomId} status updated to BOOKED for booking ${bookingId}`);
+          continue;
+        }
+
+        // Đổi status room từ AVAILABLE -> BOOKED và tăng countCapacity
+        await this.roomsService.update(roomId, { 
+          status: RoomStatus.BOOKED, 
+          countCapacity: room.countCapacity + 1 
+        });
+        console.log(`✅ Room ${roomId} status updated to BOOKED for booking ${bookingId}`);
+      }
       
     } catch (error) {
       console.error('❌ Error handling booking created event:', error.message);
@@ -117,136 +123,51 @@ export class KafkaConsumerService implements OnModuleInit {
     console.log('📩 [Kafka] Booking canceled event received:', data);
     
     try {
-      const { roomId, bookingId, userId, reason } = data;
+      const { bookingId, userId, reason, details } = data;
       
-      if (!roomId) {
-        console.warn('⚠️ No roomId in booking canceled event');
+      if (!details || !Array.isArray(details) || details.length === 0) {
+        console.warn('⚠️ No room details in booking canceled event');
         return;
       }
 
-      // Kiểm tra room có tồn tại không
-      const room = await this.roomsService.getRoomById(roomId);
-      if (!room) {
-        console.error(`❌ Room ${roomId} not found`);
-        return;
-      }
+      // Process each room in the booking
+      for (const detail of details) {
+        const { roomId, price, time } = detail;
+        
+        if (!roomId) {
+          console.warn('⚠️ No roomId in booking detail');
+          continue;
+        }
 
-      // Kiểm tra room có booked không
-      if (room.status !== RoomStatus.BOOKED) {
-        console.warn(`⚠️ Room ${roomId} is not booked (status: ${room.status})`);
-        return;
-      }
+        // Kiểm tra room có tồn tại không
+        const room = await this.roomsService.getRoomById(roomId);
+        if (!room) {
+          console.error(`❌ Room ${roomId} not found`);
+          continue;
+        }
 
-      // Đổi status room từ BOOKED -> AVAILABLE
-      await this.roomsService.updateRoomStatus(roomId, RoomStatus.AVAILABLE);
-      
-      console.log(`✅ Room ${roomId} status updated to AVAILABLE after booking ${bookingId} cancellation`);
+        // Kiểm tra room có booked không
+        if (room.status !== RoomStatus.BOOKED) {
+          console.warn(`⚠️ Room ${roomId} is not booked (status: ${room.status})`);
+          continue;
+        }
+
+        if(room.countCapacity >= room.capacity) {
+          throw new Error(`⚠️ Room ${roomId} has reached capacity (countCapacity: ${room.countCapacity}, capacity: ${room.capacity})`);
+        }
+
+        // Đổi status room từ BOOKED -> AVAILABLE
+        await this.roomsService.update(roomId, { 
+          status: RoomStatus.AVAILABLE, 
+          countCapacity: room.countCapacity + 1 
+        });
+        
+        console.log(`✅ Room ${roomId} status updated to AVAILABLE after booking ${bookingId} cancellation`);
+      }
       
     } catch (error) {
       console.error('❌ Error handling booking canceled event:', error.message);
     }
   }
 
-  // Payment events
-  private async handlePaymentSuccess(data: any) {
-    console.log('📩 [Kafka] Payment success event received:', data);
-    
-    try {
-      const { paymentId, bookingId, roomId, amount, transactionId } = data;
-      
-      if (!roomId) {
-        console.warn('⚠️ No roomId in payment success event');
-        return;
-      }
-
-      // Kiểm tra room có tồn tại không
-      const room = await this.roomsService.getRoomById(roomId);
-      if (!room) {
-        console.error(`❌ Room ${roomId} not found`);
-        return;
-      }
-
-      // Kiểm tra room có booked không (để confirm)
-      if (room.status !== RoomStatus.BOOKED) {
-        console.warn(`⚠️ Room ${roomId} is not booked (status: ${room.status})`);
-        return;
-      }
-
-      // Room vẫn giữ status BOOKED (đã được book từ trước)
-      // Payment success chỉ confirm booking, không thay đổi room status
-      
-      console.log(`✅ Payment ${paymentId} confirmed for booking ${bookingId}, room ${roomId} remains BOOKED`);
-      
-    } catch (error) {
-      console.error('❌ Error handling payment success event:', error.message);
-    }
-  }
-
-  private async handlePaymentFailed(data: any) {
-    console.log('📩 [Kafka] Payment failed event received:', data);
-    
-    try {
-      const { paymentId, bookingId, roomId, amount, reason } = data;
-      
-      if (!roomId) {
-        console.warn('⚠️ No roomId in payment failed event');
-        return;
-      }
-
-      // Kiểm tra room có tồn tại không
-      const room = await this.roomsService.getRoomById(roomId);
-      if (!room) {
-        console.error(`❌ Room ${roomId} not found`);
-        return;
-      }
-
-      // Kiểm tra room có booked không
-      if (room.status !== RoomStatus.BOOKED) {
-        console.warn(`⚠️ Room ${roomId} is not booked (status: ${room.status})`);
-        return;
-      }
-
-      // Payment failed -> release room (BOOKED -> AVAILABLE)
-      await this.roomsService.updateRoomStatus(roomId, RoomStatus.AVAILABLE);
-      
-      console.log(`✅ Room ${roomId} status updated to AVAILABLE after payment ${paymentId} failed`);
-      
-    } catch (error) {
-      console.error('❌ Error handling payment failed event:', error.message);
-    }
-  }
-
-  private async handlePaymentRefunded(data: any) {
-    console.log('📩 [Kafka] Payment refunded event received:', data);
-    
-    try {
-      const { paymentId, bookingId, roomId, amount, refundAmount, reason } = data;
-      
-      if (!roomId) {
-        console.warn('⚠️ No roomId in payment refunded event');
-        return;
-      }
-
-      // Kiểm tra room có tồn tại không
-      const room = await this.roomsService.getRoomById(roomId);
-      if (!room) {
-        console.error(`❌ Room ${roomId} not found`);
-        return;
-      }
-
-      // Kiểm tra room có booked không
-      if (room.status !== RoomStatus.BOOKED) {
-        console.warn(`⚠️ Room ${roomId} is not booked (status: ${room.status})`);
-        return;
-      }
-
-      // Payment refunded -> release room (BOOKED -> AVAILABLE)
-      await this.roomsService.updateRoomStatus(roomId, RoomStatus.AVAILABLE);
-      
-      console.log(`✅ Room ${roomId} status updated to AVAILABLE after payment ${paymentId} refunded`);
-      
-    } catch (error) {
-      console.error('❌ Error handling payment refunded event:', error.message);
-    }
-  }
 }

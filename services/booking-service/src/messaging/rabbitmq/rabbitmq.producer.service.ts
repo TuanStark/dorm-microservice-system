@@ -19,12 +19,17 @@ export class RabbitMQProducerService {
 
   async publishBookingCreated(data: any): Promise<void> {
     try {
+      if (!this.client) {
+        this.logger.error('RabbitMQ client is not available');
+        throw new Error('RabbitMQ client is not available');
+      }
+      
       await this.client.connect();
       await lastValueFrom(this.client.emit(this.routingKey, data));
       this.logger.log(`Published booking.created event: ${JSON.stringify(data)}`);
     } catch (error) {
       this.logger.error(`Failed to publish booking.created: ${error.message}`, error.stack);
-      throw error; // Có thể thêm retry logic
+      throw error;
     }
   }
 

@@ -4,6 +4,7 @@ import { BookingController } from './bookings.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { RabbitMQModule } from '../../messaging/rabbitmq/rabbitmq.module';
 import { RedisModule } from '../../messaging/redis/redis.module';
+import { KafkaModule } from 'src/messaging/kafka/kafka.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { RedisModule } from '../../messaging/redis/redis.module';
     RedisModule,
     forwardRef(() => RedisModule), // ✅ Fix circular dependency\
     forwardRef(() => RabbitMQModule), // ✅ Fix circular dependency
+    forwardRef(() => KafkaModule),
   ],
   controllers: [BookingController],
   providers: [BookingService],

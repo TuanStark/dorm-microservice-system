@@ -6,6 +6,7 @@ import { BookingStatus } from '@prisma/client';
 import { FindAllDto } from '../../common/global/find-all.dto';
 import { RabbitMQProducerService } from '../../messaging/rabbitmq/rabbitmq.producer.service';
 import { RedisService } from '../../messaging/redis/redis.service';
+import { KafkaProducerService } from 'src/messaging/kafka/kafka.producer.service';
 // import { BookingCreatedDto } from '../../messaging/rabbitmq/dto/booking-created.dto.service';
 // import { BookingUpdatedDto } from '../../messaging/rabbitmq/dto/booking-updated.dto';
 // import { BookingCanceledDto } from '../../messaging/rabbitmq/dto/booking-canceled.dto';
@@ -18,7 +19,8 @@ export class BookingService {
     private readonly prisma: PrismaService,
     private readonly rabbitMQService: RabbitMQProducerService,
     private readonly redisService: RedisService,
-  ) {}
+    private readonly kafkaProducerService: KafkaProducerService,
+    ) {}
 
   async create(userId: string, dto: CreateBookingDto) {
     try {
@@ -40,8 +42,8 @@ export class BookingService {
       });
 
       // Cache booking
-      await this.redisService.set(`booking:${booking.id}`, booking, 3600);
-      this.logger.debug(`Cached booking:${booking.id}`);
+      // await this.redisService.set(`booking:${booking.id}`, booking, 3600);
+      // this.logger.debug(`Cached booking:${booking.id}`);
 
       // Send RabbitMQ event for booking.created
       const bookingCreatedEvent: any = {
@@ -54,22 +56,19 @@ export class BookingService {
           roomId: d.roomId,
           price: d.price,
           time: d.time,
-      })),
+        })),
       };
-      await this.rabbitMQService.publishBookingCreated(bookingCreatedEvent);
-      this.logger.log(`Published booking.created event: ${booking.id}`);
+      
+      try {
+        await this.rabbitMQService.publishBookingCreated(bookingCreatedEvent);
+        this.logger.log(`Published booking.created event: ${booking.id}`);
+      } catch (error) {
+        this.logger.warn(`Failed to publish booking.created event: ${error.message}`);
+        // Continue execution even if RabbitMQ fails
+      }
 
-      // Send RabbitMQ payment request
-      const totalAmount = booking.details.reduce((sum, detail) => sum + detail.price, 0);
-      await this.rabbitMQService.publishBookingCreated({
-        bookingId: booking.id,
-        userId: booking.userId,
-        status: booking.status,
-        startDate: booking.startDate,
-        endDate: booking.endDate,
-        details: booking.details.map((d) => ({ roomId: d.roomId, price: d.price, time: d.time })),
-      });
-      this.logger.log(`Published booking.created event for booking: ${booking.id}`);
+      await this.kafkaProducerService.emitBookingCreatedEvent(bookingCreatedEvent);
+      this.logger.log(`Published booking.created event to Kafka: ${booking.id}`);
 
       return booking;
     } catch (error) {

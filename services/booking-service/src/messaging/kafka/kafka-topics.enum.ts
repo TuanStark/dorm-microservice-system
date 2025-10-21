@@ -2,7 +2,6 @@ export enum KafkaTopics {
     // Booking events
     BOOKING_CREATED = 'booking.created',
     BOOKING_CANCELED = 'booking.canceled',
-    BOOKING_SUCCESS = 'booking.success',
     
     // Payment events
     PAYMENT_SUCCESS = 'payment.success',
@@ -14,6 +13,11 @@ export enum KafkaTopics {
     ROOM_UPDATED = 'room.updated',
     ROOM_DELETED = 'room.deleted',
     
+    // Building events
+    BUILDING_CREATED = 'building.created',
+    BUILDING_UPDATED = 'building.updated',
+    BUILDING_DELETED = 'building.deleted',
+    
     // User events
     USER_REGISTERED = 'user.registered',
     USER_UPDATED = 'user.updated',
@@ -24,5 +28,8 @@ export enum KafkaTopics {
     // Review events
     REVIEW_CREATED = 'review.created',
     REVIEW_UPDATED = 'review.updated',
+
+    PAYMENT_STATUS_UPDATED = 'payment.status.updated',
+
   }
   
