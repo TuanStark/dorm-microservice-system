@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: booking_gitlab
+    restart: always
+    ports:
+      - '8928:80'
+      - '2224:22'
+    volumes:
+      - gitlab_config:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
+    shm_size: 256m
+    networks:
+      my_custom_network:
+        ipv4_address: ${GITLAB_IP}
+
+networks:
+  my_custom_network:
+    external: true
+
+volumes:
+  gitlab_config:
+  gitlab_logs:
+  gitlab_data:
