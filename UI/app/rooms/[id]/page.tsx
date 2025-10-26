@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import Link from 'next/link'
+import { useRequireAuth } from '@/hooks/useAuth'
 import Image from 'next/image'
 import { 
   ArrowLeft, 
@@ -38,6 +38,9 @@ import { Room, BookingFormData } from '@/types'
 export default function RoomDetailPage() {
   const params = useParams()
   const roomId = params.id as string
+  
+  // Require authentication for room booking
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth()
   
   const [room, setRoom] = useState<Room | null>(null)
   const [building, setBuilding] = useState<any>(null)
@@ -84,19 +87,25 @@ export default function RoomDetailPage() {
     }
   }
 
-  if (isLoading) {
+  // Show loading while checking authentication
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Navbar />
         <div className="pt-20 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Đang tải...</p>
+            <p className="text-gray-600 dark:text-gray-400">Đang kiểm tra quyền truy cập...</p>
           </div>
         </div>
         <Footer />
       </div>
     )
+  }
+
+  // If not authenticated, the hook will redirect to login
+  if (!isAuthenticated) {
+    return null
   }
 
   if (!room || !building) {

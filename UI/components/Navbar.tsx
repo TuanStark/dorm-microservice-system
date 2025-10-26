@@ -3,18 +3,26 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Sun, Moon, Building2 } from 'lucide-react'
+import { useSession, signOut } from 'next-auth/react'
+import { Menu, X, Sun, Moon, Building2, User, LogOut, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { NAV_ITEMS } from '@/constants'
+import { NAV_ITEMS } from '../constants'
+import AuthStatus from './AuthStatus'
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const pathname = usePathname()
+  const { data: session, status } = useSession()
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode)
     document.documentElement.classList.toggle('dark')
+  }
+
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' })
   }
 
   return (
@@ -65,12 +73,8 @@ export default function Navbar() {
                 <Moon className="h-5 w-5" />
               )}
             </button>
-            <button className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 text-sm font-medium transition-colors duration-200">
-              Đăng nhập
-            </button>
-            <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl">
-              Đăng ký
-            </button>
+            
+            <AuthStatus />
           </div>
 
           {/* Mobile menu button */}
@@ -118,12 +122,57 @@ export default function Navbar() {
                 </Link>
               ))}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                <button className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 text-base font-medium w-full text-left transition-colors duration-200">
-                  Đăng nhập
-                </button>
-                <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-lg text-base font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-200 w-full mt-2">
-                  Đăng ký
-                </button>
+                {session ? (
+                  <>
+                    <div className="px-3 py-2 mb-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                          <User className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {session.user?.name || 'User'}
+                        </span>
+                      </div>
+                    </div>
+                    <Link
+                      href="/profile"
+                      className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 text-base font-medium w-full text-left transition-colors duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Hồ sơ
+                    </Link>
+                    <Link
+                      href="/bookings"
+                      className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 text-base font-medium w-full text-left transition-colors duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Đặt phòng của tôi
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="text-red-600 dark:text-red-400 block px-3 py-2 text-base font-medium w-full text-left transition-colors duration-200"
+                    >
+                      Đăng xuất
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/auth/signin"
+                      className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 text-base font-medium w-full text-left transition-colors duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Đăng nhập
+                    </Link>
+                    <Link
+                      href="/auth/signup"
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-lg text-base font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-200 w-full mt-2 block text-center"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Đăng ký
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

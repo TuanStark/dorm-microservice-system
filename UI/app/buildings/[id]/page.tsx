@@ -34,7 +34,7 @@ import RoomCard from '@/components/RoomCard'
 import FilterBar from '@/components/FilterBar'
 import { LoadingState, EmptyState } from '@/components/ui/UtilityComponents'
 import { cn } from '@/lib/utils'
-import { MockDataService } from '@/services/mockDataService'
+import { BuildingService, RoomService } from '@/services/backendService'
 import { Building, Room, FilterState, SearchParams } from '@/types'
 
 export default function BuildingDetailPage() {
@@ -66,12 +66,20 @@ export default function BuildingDetailPage() {
     const fetchBuildingData = async () => {
       try {
         setIsLoading(true)
-        const buildingData = MockDataService.getBuildingById(buildingId)
-        const roomsData = MockDataService.getRoomsByBuildingId(buildingId)
-        setBuilding(buildingData)
-        setRooms(roomsData)
+        const [buildingData, roomsData] = await Promise.all([
+          BuildingService.getBuildingById(buildingId),
+          RoomService.getRoomsByBuildingId(buildingId)
+        ])
+        
+        if (buildingData) {
+          setBuilding(buildingData)
+          setRooms(roomsData)
+        } else {
+          setBuilding(null)
+        }
       } catch (error) {
         console.error('Error fetching building data:', error)
+        setBuilding(null)
       } finally {
         setIsLoading(false)
       }

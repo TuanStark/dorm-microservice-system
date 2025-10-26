@@ -1,17 +1,35 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import SearchBar from '@/components/SearchBar'
 import BuildingCard from '@/components/BuildingCard'
 import Footer from '@/components/Footer'
 import { Building2, Users, Star, ArrowRight, MapPin, Wifi, Car, Utensils, Shield, Clock } from 'lucide-react'
-import { MockDataService } from '@/services/mockDataService'
-
-// Mock data for featured dorms
-const featuredDorms = MockDataService.getFeaturedBuildings(4)
+import { BuildingService } from '@/services/backendService'
+import { Building } from '@/types'
 
 export default function Home() {
+  const [featuredDorms, setFeaturedDorms] = useState<Building[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchFeaturedBuildings = async () => {
+      try {
+        const buildings = await BuildingService.getFeaturedBuildings(4)
+        setFeaturedDorms(buildings)
+      } catch (error) {
+        console.error('Error fetching featured buildings:', error)
+        // Fallback to empty array
+        setFeaturedDorms([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchFeaturedBuildings()
+  }, [])
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
@@ -74,9 +92,33 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-            {featuredDorms.map((dorm) => (
-              <BuildingCard key={dorm.id} building={dorm} />
-            ))}
+            {isLoading ? (
+              // Loading skeleton
+              Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden animate-pulse">
+                  <div className="h-48 bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="p-6 space-y-3">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))
+            ) : featuredDorms.length > 0 ? (
+              featuredDorms.map((dorm) => (
+                <BuildingCard key={dorm.id} building={dorm} />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Không có tòa nhà nào
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Hiện tại chưa có tòa nhà nào được hiển thị
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="text-center">

@@ -1,21 +1,38 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Map, Grid, Building2, Star, MapPin, DollarSign, Users, Eye } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import DormMap from '@/components/DormMap'
 import Footer from '@/components/Footer'
 import { cn } from '@/lib/utils'
-import { MockDataService } from '@/services/mockDataService'
+import { BuildingService } from '@/services/backendService'
 import { Building } from '@/types'
 
 export default function BuildingsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid')
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | undefined>()
-  
-  // Get buildings data from mock service
-  const buildings = MockDataService.getAllBuildings()
+  const [buildings, setBuildings] = useState<Building[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchBuildings = async () => {
+      try {
+        setIsLoading(true)
+        const buildingsData = await BuildingService.getAllBuildings()
+        setBuildings(buildingsData)
+      } catch (error) {
+        console.error('Error fetching buildings:', error)
+        setError('Không thể tải danh sách tòa nhà')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchBuildings()
+  }, [])
 
   const handleBuildingSelect = (buildingId: string) => {
     setSelectedBuildingId(buildingId)
