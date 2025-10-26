@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import SearchBar from '@/components/SearchBar'
-import RoomCard from '@/components/RoomCard'
+import BuildingCard from '@/components/BuildingCard'
 import Footer from '@/components/Footer'
 import { Building2, Users, Star, ArrowRight, MapPin, Wifi, Car, Utensils, Shield, Clock } from 'lucide-react'
 import { MockDataService } from '@/services/mockDataService'
@@ -75,7 +75,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {featuredDorms.map((dorm) => (
-              <RoomCard key={dorm.id} dorm={dorm} />
+              <BuildingCard key={dorm.id} building={dorm} />
             ))}
           </div>
 
