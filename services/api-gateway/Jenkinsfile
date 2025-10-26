@@ -1,0 +1,152 @@
+pipeline {
+    agent any
+    
+    environment {
+        SERVICE_NAME = 'api-gateway'
+        SERVICE_PORT = '3000'
+        DOCKER_IMAGE = "dorm-booking/${SERVICE_NAME}"
+        DOCKER_TAG = "${BUILD_NUMBER}"
+        NODE_VERSION = '18'
+        DOCKER_REGISTRY = 'docker.io/mycompany'
+        DOCKER_CREDENTIALS_ID = 'docker-credentials' // ID của credentials trong Jenkins
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                script {
+                    env.GIT_COMMIT_SHORT = sh(
+                        script: "git rev-parse --short HEAD",
+                        returnStdout: true
+                    ).trim()
+                }
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                dir("services/${SERVICE_NAME}") {
+                    sh 'npm ci'
+                }
+            }
+        }
+        
+        stage('Lint & Format') {
+            steps {
+                dir("services/${SERVICE_NAME}") {
+                    sh 'npm run lint'
+                    sh 'npm run format'
+                }
+            }
+        }
+        
+        stage('Unit Tests') {
+            steps {
+                dir("services/${SERVICE_NAME}") {
+                    sh 'npm test -- --coverage --watchAll=false'
+                }
+            }
+            post {
+                always {
+                    publishTestResults testResultsPattern: 'services/api-gateway/coverage/test-results.xml'
+                    publishCoverage adapters: [
+                        jacocoAdapter('services/api-gateway/coverage/lcov.info')
+                    ], sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
+                }
+            }
+        }
+        
+        stage('Build Application') {
+            steps {
+                dir("services/${SERVICE_NAME}") {
+                    sh 'npm run build'
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    def image = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}", "-f services/${SERVICE_NAME}/Dockerfile services/${SERVICE_NAME}")
+                    docker.withRegistry('', 'docker-registry-credentials') {
+                        image.push("${DOCKER_TAG}")
+                        image.push("latest")
+                    }
+                }
+            }
+        }
+        
+        stage('Security Scan') {
+            steps {
+                script {
+                    sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    def buildNumber = env.BUILD_NUMBER
+                    def dockerImage = "${DOCKER_REGISTRY}/${APP_NAME}:${buildNumber}"
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", "${DOCKER_CREDENTIALS_ID}") {
+                        sh "docker push ${dockerImage}"
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy to Staging') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                script {
+                    sh """
+                        kubectl set image deployment/${SERVICE_NAME} ${SERVICE_NAME}=${DOCKER_IMAGE}:${DOCKER_TAG} -n staging
+                        kubectl rollout status deployment/${SERVICE_NAME} -n staging --timeout=300s
+                    """
+                }
+            }
+        }
+        
+        stage('Deploy to Production') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    sh """
+                        kubectl set image deployment/${SERVICE_NAME} ${SERVICE_NAME}=${DOCKER_IMAGE}:${DOCKER_TAG} -n production
+                        kubectl rollout status deployment/${SERVICE_NAME} -n production --timeout=300s
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            script {
+                if (env.BRANCH_NAME == 'main') {
+                    slackSend(
+                        channel: '#deployments',
+                        color: 'good',
+                        message: "✅ ${SERVICE_NAME} deployed successfully to production! 🚀"
+                    )
+                }
+            }
+        }
+        failure {
+            slackSend(
+                channel: '#deployments',
+                color: 'danger',
+                message: "❌ ${SERVICE_NAME} deployment failed! Check Jenkins logs."
+            )
+        }
+    }
+}

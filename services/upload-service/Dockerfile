@@ -1,4 +1,4 @@
-# Multi-stage build for API Gateway
+# Multi-stage build for Upload Service
 FROM node:18-alpine AS builder
 
 # Set working directory
@@ -42,11 +42,11 @@ COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 USER nestjs
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3007
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
+  CMD node -e "require('http').get('http://localhost:3007/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
 # Use dumb-init for proper signal handling
 ENTRYPOINT ["dumb-init", "--"]
