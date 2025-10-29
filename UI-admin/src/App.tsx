@@ -22,6 +22,8 @@ import BookingsPage from './pages/bookings/BookingsPage';
 import PaymentsPage from './pages/payments/PaymentsPage';
 import ReviewsPage from './pages/reviews/ReviewsPage';
 import SettingsPage from './pages/settings/SettingsPage';
+import RoomsPage from './pages/rooms/RoomsPage';
+import RoomDetailPage from './pages/rooms/RoomDetailPage';
 
 function App() {
   return (
@@ -59,6 +61,8 @@ function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/buildings" element={<BuildingsPage />} />
+            <Route path="/rooms" element={<RoomsPage />} />
+            <Route path="/rooms/:id" element={<RoomDetailPage />} />
             <Route path="/bookings" element={<BookingsPage />} />
             <Route path="/payments" element={<PaymentsPage />} />
             <Route path="/reviews" element={<ReviewsPage />} />

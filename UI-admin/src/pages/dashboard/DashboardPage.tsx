@@ -42,7 +42,7 @@ const DashboardPage: React.FC = () => {
 
   const statCards = [
     {
-      title: 'Total Users',
+      title: 'Tổng số người dùng',
       value: stats.totalUsers.toLocaleString(),
       icon: Users,
       color: 'bg-blue-100 text-blue-600',
@@ -50,7 +50,7 @@ const DashboardPage: React.FC = () => {
       trend: 'up'
     },
     {
-      title: 'Total Rooms',
+      title: 'Tổng số phòng',
       value: stats.totalRooms.toLocaleString(),
       icon: Home,
       color: 'bg-green-100 text-green-600',
@@ -58,7 +58,7 @@ const DashboardPage: React.FC = () => {
       trend: 'up'
     },
     {
-      title: 'Available Rooms',
+      title: 'Phòng còn trống',
       value: stats.availableRooms.toLocaleString(),
       icon: Home,
       color: 'bg-orange-100 text-orange-600',
@@ -66,7 +66,7 @@ const DashboardPage: React.FC = () => {
       trend: 'down'
     },
     {
-      title: 'Total Bookings',
+      title: 'Tổng số đặt phòng',
       value: stats.totalBookings.toLocaleString(),
       icon: Calendar,
       color: 'bg-purple-100 text-purple-600',
@@ -74,7 +74,7 @@ const DashboardPage: React.FC = () => {
       trend: 'up'
     },
     {
-      title: 'Revenue',
+      title: 'Doanh thu',
       value: `$${stats.totalRevenue.toLocaleString()}`,
       icon: DollarSign,
       color: 'bg-emerald-100 text-emerald-600',
@@ -82,7 +82,7 @@ const DashboardPage: React.FC = () => {
       trend: 'up'
     },
     {
-      title: 'Reviews',
+      title: 'Đánh giá',
       value: stats.totalReviews.toLocaleString(),
       icon: MessageSquare,
       color: 'bg-pink-100 text-pink-600',
@@ -93,17 +93,17 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      {/* Tiêu đề trang */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Dashboard Overview
+          Tổng quan hệ thống
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Welcome back! Here's what's happening with your dormitory system.
+          Chào mừng bạn trở lại! Dưới đây là tình hình hệ thống ký túc xá của bạn.
         </p>
       </div>
 
-      {/* Stats Grid */}
+      {/* Thống kê nhanh */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
@@ -128,7 +128,7 @@ const DashboardPage: React.FC = () => {
                     {stat.change}
                   </span>
                   <span className="text-xs text-gray-600 dark:text-gray-400 ml-2">
-                    from last month
+                    so với tháng trước
                   </span>
                 </div>
               </CardContent>
@@ -137,14 +137,14 @@ const DashboardPage: React.FC = () => {
         })}
       </div>
 
-      {/* Charts Section */}
+      {/* Khu vực biểu đồ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Bookings Chart */}
+        {/* Biểu đồ đặt phòng theo tháng */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Monthly Bookings</CardTitle>
+            <CardTitle className="text-lg font-semibold">Đặt phòng theo tháng</CardTitle>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Number of bookings per month
+              Số lượt đặt phòng mỗi tháng
             </p>
           </CardHeader>
           <CardContent>
@@ -166,12 +166,12 @@ const DashboardPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Monthly Revenue Chart */}
+        {/* Biểu đồ doanh thu theo tháng */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Monthly Revenue</CardTitle>
+            <CardTitle className="text-lg font-semibold">Doanh thu theo tháng</CardTitle>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Revenue generated per month
+              Doanh thu mỗi tháng
             </p>
           </CardHeader>
           <CardContent>
@@ -188,12 +188,12 @@ const DashboardPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Occupancy Rate Chart */}
+      {/* Tỉ lệ lấp đầy */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Occupancy Rate</CardTitle>
+          <CardTitle className="text-lg font-semibold">Tỉ lệ lấp đầy</CardTitle>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Current occupancy vs availability
+            Tình trạng đã ở so với còn trống hiện tại
           </p>
         </CardHeader>
         <CardContent>
@@ -206,7 +206,7 @@ const DashboardPage: React.FC = () => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => `${name === 'Occupied' ? 'Đã ở' : 'Còn trống'} ${(percent * 100).toFixed(0)}%`}
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="value"
@@ -224,10 +224,10 @@ const DashboardPage: React.FC = () => {
                 <div className="h-4 w-4 bg-blue-500 rounded"></div>
                 <div>
                   <p className="font-semibold text-gray-900 dark:text-white">
-                    {occupancyData[0].value.toFixed(1)}% Occupied
+                    {occupancyData[0].value.toFixed(1)}% Đã ở
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {Math.round((stats.totalRooms * occupancyData[0].value) / 100)} rooms
+                    {Math.round((stats.totalRooms * occupancyData[0].value) / 100)} phòng
                   </p>
                 </div>
               </div>
@@ -235,16 +235,16 @@ const DashboardPage: React.FC = () => {
                 <div className="h-4 w-4 bg-gray-300 rounded"></div>
                 <div>
                   <p className="font-semibold text-gray-900 dark:text-white">
-                    {occupancyData[1].value.toFixed(1)}% Available
+                    {occupancyData[1].value.toFixed(1)}% Còn trống
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {stats.availableRooms} rooms
+                    {stats.availableRooms} phòng
                   </p>
                 </div>
               </div>
               <Button className="w-fit">
                 <TrendingUp className="mr-2 h-4 w-4" />
-                View Detailed Report
+                Xem báo cáo chi tiết
               </Button>
             </div>
           </div>

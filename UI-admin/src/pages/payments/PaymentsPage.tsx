@@ -69,9 +69,9 @@ const PaymentsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Payment Management</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Quản lý thanh toán</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Track and manage all payment transactions
+          Theo dõi và quản lý tất cả giao dịch thanh toán
         </p>
       </div>
 
@@ -80,7 +80,7 @@ const PaymentsPage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tổng doanh thu</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">${totalRevenue.toLocaleString()}</p>
               </div>
               <DollarSign className="h-8 w-8 text-green-600" />
@@ -91,7 +91,7 @@ const PaymentsPage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Transactions</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tổng giao dịch</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{payments.length}</p>
               </div>
               <DollarSign className="h-8 w-8 text-blue-600" />
@@ -102,7 +102,7 @@ const PaymentsPage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Đang chờ</p>
                 <p className="text-2xl font-bold text-orange-600">{pendingPayments}</p>
               </div>
               <Clock className="h-8 w-8 text-orange-600" />
@@ -113,7 +113,7 @@ const PaymentsPage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Success Rate</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tỉ lệ thành công</p>
                 <p className="text-2xl font-bold text-green-600">
                   {((payments.filter(p => p.status === 'completed').length / payments.length) * 100).toFixed(1)}%
                 </p>
@@ -126,7 +126,7 @@ const PaymentsPage: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Revenue</CardTitle>
+          <CardTitle>Doanh thu theo tháng</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -149,14 +149,14 @@ const PaymentsPage: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle>Bộ lọc</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search transactions..."
+                placeholder="Tìm kiếm giao dịch..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -167,7 +167,7 @@ const PaymentsPage: React.FC = () => {
               onChange={(e) => setSelectedMethod(e.target.value as any)}
               className="px-4 py-2 border border-gray-300 rounded-md"
             >
-              <option value="all">All Methods</option>
+              <option value="all">Tất cả phương thức</option>
               <option value="MOMO">MOMO</option>
               <option value="VNPay">VNPay</option>
               <option value="Bank Transfer">Bank Transfer</option>
@@ -178,11 +178,11 @@ const PaymentsPage: React.FC = () => {
               onChange={(e) => setSelectedStatus(e.target.value as any)}
               className="px-4 py-2 border border-gray-300 rounded-md"
             >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
-              <option value="failed">Failed</option>
-              <option value="refunded">Refunded</option>
+              <option value="all">Tất cả trạng thái</option>
+              <option value="pending">Đang chờ</option>
+              <option value="completed">Hoàn tất</option>
+              <option value="failed">Thất bại</option>
+              <option value="refunded">Hoàn tiền</option>
             </select>
           </div>
         </CardContent>
@@ -190,20 +190,20 @@ const PaymentsPage: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Transactions ({filteredPayments.length})</CardTitle>
+          <CardTitle>Giao dịch ({filteredPayments.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Transaction ID</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">User</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Amount</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Method</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Status</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Created</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Actions</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Mã giao dịch</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Người dùng</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Số tiền</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Phương thức</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Trạng thái</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Tạo lúc</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Hành động</th>
                 </tr>
               </thead>
               <tbody>

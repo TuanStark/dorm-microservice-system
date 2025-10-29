@@ -74,34 +74,34 @@ const BookingsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Booking Management</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Quản lý đặt phòng</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Manage and track all room bookings
+          Quản lý và theo dõi tất cả lượt đặt phòng
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Bookings</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tổng lượt đặt</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{bookings.length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Chờ duyệt</p>
             <p className="text-2xl font-bold text-orange-600">{bookings.filter(b => b.bookingStatus === 'pending').length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Confirmed</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Đã xác nhận</p>
             <p className="text-2xl font-bold text-green-600">{bookings.filter(b => b.bookingStatus === 'confirmed').length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Revenue</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Doanh thu</p>
             <p className="text-2xl font-bold text-blue-600">
               ${bookings.filter(b => b.paymentStatus === 'paid').reduce((sum, b) => sum + b.totalAmount, 0)}
             </p>
@@ -111,14 +111,14 @@ const BookingsPage: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle>Bộ lọc</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search bookings..."
+                placeholder="Tìm kiếm đặt phòng..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -129,22 +129,22 @@ const BookingsPage: React.FC = () => {
               onChange={(e) => setSelectedStatus(e.target.value as any)}
               className="px-4 py-2 border border-gray-300 rounded-md"
             >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="completed">Completed</option>
+              <option value="all">Tất cả trạng thái</option>
+              <option value="pending">Chờ duyệt</option>
+              <option value="confirmed">Đã xác nhận</option>
+              <option value="cancelled">Đã hủy</option>
+              <option value="completed">Hoàn tất</option>
             </select>
             <select
               value={selectedPaymentStatus}
               onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
               className="px-4 py-2 border border-gray-300 rounded-md"
             >
-              <option value="all">All Payments</option>
-              <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
-              <option value="failed">Failed</option>
-              <option value="refunded">Refunded</option>
+              <option value="all">Tất cả thanh toán</option>
+              <option value="pending">Chờ thanh toán</option>
+              <option value="paid">Đã thanh toán</option>
+              <option value="failed">Thất bại</option>
+              <option value="refunded">Hoàn tiền</option>
             </select>
           </div>
         </CardContent>
@@ -152,21 +152,21 @@ const BookingsPage: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Bookings ({filteredBookings.length})</CardTitle>
+          <CardTitle>Đặt phòng ({filteredBookings.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Student</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Room</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Check-in</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Check-out</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Amount</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Payment</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Status</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Actions</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Sinh viên</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Phòng</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Nhận phòng</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Trả phòng</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Số tiền</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Thanh toán</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Trạng thái</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Hành động</th>
                 </tr>
               </thead>
               <tbody>
@@ -213,7 +213,7 @@ const BookingsPage: React.FC = () => {
                             className="bg-green-600 hover:bg-green-700"
                           >
                             <CheckCircle className="h-4 w-4 mr-1" />
-                            Approve
+                            Duyệt
                           </Button>
                           <Button
                             size="sm"
@@ -221,12 +221,12 @@ const BookingsPage: React.FC = () => {
                             onClick={() => handleRejectBooking(booking.id)}
                           >
                             <XCircle className="h-4 w-4 mr-1" />
-                            Reject
+                            Từ chối
                           </Button>
                         </div>
                       )}
                       {booking.bookingStatus === 'confirmed' && (
-                        <span className="text-sm text-gray-600 dark:text-gray-400">Confirmed</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Đã xác nhận</span>
                       )}
                     </td>
                   </tr>

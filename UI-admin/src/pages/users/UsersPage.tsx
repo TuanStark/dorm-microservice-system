@@ -76,25 +76,25 @@ const UsersPage: React.FC = () => {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">User Management</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Quản lý người dùng</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Manage all registered users in the system
+            Quản lý tất cả người dùng đã đăng ký trong hệ thống
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700">
               <Plus className="mr-2 h-4 w-4" />
-              Add User
+              Thêm người dùng
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>{editingUser ? 'Edit User' : 'Add New User'}</DialogTitle>
+              <DialogTitle>{editingUser ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">Họ và tên</Label>
                 <Input id="name" defaultValue={editingUser?.name || ''} />
               </div>
               <div className="grid gap-2">
@@ -102,15 +102,15 @@ const UsersPage: React.FC = () => {
                 <Input id="email" type="email" defaultValue={editingUser?.email || ''} />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role">Vai trò</Label>
                 <select id="role" className="h-10 rounded-md border border-input bg-background px-3 py-2">
-                  <option value="student">Student</option>
-                  <option value="admin">Admin</option>
+                  <option value="student">Sinh viên</option>
+                  <option value="admin">Quản trị</option>
                 </select>
               </div>
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button onClick={() => setIsDialogOpen(false)}>Save Changes</Button>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Hủy</Button>
+                <Button onClick={() => setIsDialogOpen(false)}>Lưu thay đổi</Button>
               </div>
             </div>
           </DialogContent>
@@ -123,7 +123,7 @@ const UsersPage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Users</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tổng người dùng</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{users.length}</p>
               </div>
               <UsersIcon className="h-8 w-8 text-blue-600" />
@@ -134,7 +134,7 @@ const UsersPage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Users</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Đang hoạt động</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {users.filter(u => u.status === 'active').length}
                 </p>
@@ -147,7 +147,7 @@ const UsersPage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Students</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Sinh viên</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {users.filter(u => u.role === 'student').length}
                 </p>
@@ -160,7 +160,7 @@ const UsersPage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Admins</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Quản trị</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {users.filter(u => u.role === 'admin').length}
                 </p>
@@ -174,15 +174,15 @@ const UsersPage: React.FC = () => {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle>Bộ lọc</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search by name or email..."
+                  <Input
+                  placeholder="Tìm theo tên hoặc email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -194,18 +194,18 @@ const UsersPage: React.FC = () => {
               onChange={(e) => setSelectedRole(e.target.value as any)}
               className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
             >
-              <option value="all">All Roles</option>
-              <option value="student">Student</option>
-              <option value="admin">Admin</option>
+              <option value="all">Tất cả vai trò</option>
+              <option value="student">Sinh viên</option>
+              <option value="admin">Quản trị</option>
             </select>
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value as any)}
               className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
             >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="all">Tất cả trạng thái</option>
+              <option value="active">Hoạt động</option>
+              <option value="inactive">Không hoạt động</option>
             </select>
           </div>
         </CardContent>
@@ -214,19 +214,19 @@ const UsersPage: React.FC = () => {
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Users ({filteredUsers.length})</CardTitle>
+          <CardTitle>Người dùng ({filteredUsers.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Name</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Họ tên</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Email</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Role</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Status</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Created</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Vai trò</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Trạng thái</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Tạo lúc</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Hành động</th>
                 </tr>
               </thead>
               <tbody>

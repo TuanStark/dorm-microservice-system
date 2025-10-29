@@ -40,37 +40,42 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
 
   const navigationItems = [
     {
-      name: 'Dashboard',
+      name: 'Tổng quan',
       href: '/dashboard',
       icon: LayoutDashboard,
     },
     {
-      name: 'Users',
+      name: 'Người dùng',
       href: '/users',
       icon: Users,
     },
     {
-      name: 'Buildings & Rooms',
+      name: 'Tòa nhà',
       href: '/buildings',
       icon: Home,
     },
     {
-      name: 'Bookings',
+      name: 'Phòng',
+      href: '/rooms',
+      icon: Home,
+    },
+    {
+      name: 'Đặt phòng',
       href: '/bookings',
       icon: Calendar,
     },
     {
-      name: 'Payments',
+      name: 'Thanh toán',
       href: '/payments',
       icon: CreditCard,
     },
     {
-      name: 'Reviews',
+      name: 'Đánh giá',
       href: '/reviews',
       icon: MessageSquare,
     },
     {
-      name: 'Settings',
+      name: 'Cài đặt',
       href: '/settings',
       icon: Settings,
     },
@@ -78,18 +83,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
 
   return (
     <div className={cn(
-      "bg-white border-r border-gray-200 transition-all duration-300 ease-in-out",
+      "h-screen flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ease-in-out",
       isCollapsed ? "w-16" : "w-64",
       "dark:bg-gray-900 dark:border-gray-700"
     )}>
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         {!isCollapsed && (
           <div className="flex items-center space-x-2">
             <div className="p-2 bg-blue-100 rounded-lg dark:bg-blue-900">
               <Home className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <span className="text-lg font-semibold text-gray-900 dark:text-white">
-              DormAdmin
+              Quản lý KTX
             </span>
           </div>
         )}
@@ -103,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
         </Button>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {navigationItems.map((item) => {
           const isActive = location.pathname === item.href;
           return (
@@ -125,7 +130,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
         })}
       </nav>
 
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
         <div className="flex items-center space-x-3">
           <Avatar className="h-8 w-8">
             <AvatarImage src={user?.avatar || "/api/placeholder/32/32"} />
@@ -177,7 +182,7 @@ const TopBar: React.FC<{
           
           <div className="hidden lg:block">
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-              Dashboard
+              Tổng quan
             </h1>
           </div>
         </div>
@@ -187,7 +192,7 @@ const TopBar: React.FC<{
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Tìm kiếm..."
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
             />
           </div>
@@ -240,12 +245,12 @@ const TopBar: React.FC<{
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate('/settings')}>
                 <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+                <span>Cài đặt</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
+                <span>Đăng xuất</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

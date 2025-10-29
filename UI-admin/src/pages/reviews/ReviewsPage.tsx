@@ -89,9 +89,9 @@ const ReviewsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Reviews & Feedback</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Đánh giá & phản hồi</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Manage student reviews and feedback
+          Quản lý đánh giá và phản hồi của sinh viên
         </p>
       </div>
 
@@ -100,7 +100,7 @@ const ReviewsPage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Reviews</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tổng số đánh giá</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{reviews.length}</p>
               </div>
               <MessageSquare className="h-8 w-8 text-blue-600" />
@@ -111,7 +111,7 @@ const ReviewsPage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Average Rating</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Điểm trung bình</p>
                 <p className="text-2xl font-bold text-yellow-600">{averageRating}</p>
               </div>
               <Star className="h-8 w-8 text-yellow-600 fill-yellow-600" />
@@ -122,7 +122,7 @@ const ReviewsPage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Visible Reviews</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Đang hiển thị</p>
                 <p className="text-2xl font-bold text-green-600">
                   {reviews.filter(r => r.isVisible).length}
                 </p>
@@ -135,7 +135,7 @@ const ReviewsPage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Hidden Reviews</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Bị ẩn</p>
                 <p className="text-2xl font-bold text-red-600">
                   {reviews.filter(r => !r.isVisible).length}
                 </p>
@@ -148,14 +148,14 @@ const ReviewsPage: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle>Bộ lọc</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search reviews..."
+                placeholder="Tìm kiếm đánh giá..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -166,21 +166,21 @@ const ReviewsPage: React.FC = () => {
               onChange={(e) => setSelectedRating(e.target.value as any)}
               className="px-4 py-2 border border-gray-300 rounded-md"
             >
-              <option value="all">All Ratings</option>
-              <option value="5">5 Stars</option>
-              <option value="4">4 Stars</option>
-              <option value="3">3 Stars</option>
-              <option value="2">2 Stars</option>
-              <option value="1">1 Star</option>
+              <option value="all">Tất cả điểm</option>
+              <option value="5">5 sao</option>
+              <option value="4">4 sao</option>
+              <option value="3">3 sao</option>
+              <option value="2">2 sao</option>
+              <option value="1">1 sao</option>
             </select>
             <select
               value={selectedVisibility}
               onChange={(e) => setSelectedVisibility(e.target.value as any)}
               className="px-4 py-2 border border-gray-300 rounded-md"
             >
-              <option value="all">All</option>
-              <option value="visible">Visible</option>
-              <option value="hidden">Hidden</option>
+              <option value="all">Tất cả</option>
+              <option value="visible">Hiển thị</option>
+              <option value="hidden">Ẩn</option>
             </select>
           </div>
         </CardContent>
@@ -188,7 +188,7 @@ const ReviewsPage: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Reviews ({filteredReviews.length})</CardTitle>
+          <CardTitle>Đánh giá ({filteredReviews.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -208,7 +208,7 @@ const ReviewsPage: React.FC = () => {
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">{review.userName}</p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {review.buildingName} - Room {review.roomNumber}
+                          {review.buildingName} - Phòng {review.roomNumber}
                         </p>
                       </div>
                     </div>
@@ -231,9 +231,9 @@ const ReviewsPage: React.FC = () => {
                       className={review.isVisible ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}
                     >
                       {review.isVisible ? (
-                        <><EyeOff className="h-4 w-4 mr-2" /> Hide</>
+                        <><EyeOff className="h-4 w-4 mr-2" /> Ẩn</>
                       ) : (
-                        <><Eye className="h-4 w-4 mr-2" /> Show</>
+                        <><Eye className="h-4 w-4 mr-2" /> Hiển thị</>
                       )}
                     </Button>
                   </div>

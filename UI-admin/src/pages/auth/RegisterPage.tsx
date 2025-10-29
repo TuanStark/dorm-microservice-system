@@ -41,33 +41,33 @@ const RegisterPage: React.FC = () => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.name.trim()) {
-      newErrors.name = 'Full name is required';
+      newErrors.name = 'Họ tên là bắt buộc';
     } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
+      newErrors.name = 'Họ tên phải có ít nhất 2 ký tự';
     }
     
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'Email là bắt buộc';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = 'Email không hợp lệ';
     }
     
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Mật khẩu là bắt buộc';
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+      newErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự';
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = 'Password must contain uppercase, lowercase, and number';
+      newErrors.password = 'Mật khẩu phải chứa chữ hoa, chữ thường và số';
     }
     
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu';
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'Mật khẩu không khớp';
     }
     
     if (!formData.agreeToTerms) {
-      newErrors.agreeToTerms = 'You must agree to the terms and conditions';
+      newErrors.agreeToTerms = 'Bạn phải đồng ý với điều khoản sử dụng';
     }
     
     setErrors(newErrors);
@@ -93,7 +93,7 @@ const RegisterPage: React.FC = () => {
       navigate('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
-      setSubmitError(error instanceof Error ? error.message : 'Registration failed. Please try again.');
+      setSubmitError(error instanceof Error ? error.message : 'Đăng ký thất bại. Vui lòng thử lại.');
     }
   };
 
@@ -115,10 +115,10 @@ const RegisterPage: React.FC = () => {
               </div>
             </div>
             <CardTitle className="text-2xl font-bold text-gray-900">
-              Create Admin Account
+              Tạo tài khoản quản trị
             </CardTitle>
             <CardDescription className="text-gray-600">
-              Join the dormitory management system
+              Tham gia hệ thống quản lý ký túc xá
             </CardDescription>
           </CardHeader>
           
@@ -126,7 +126,7 @@ const RegisterPage: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                  Full Name
+                  Họ và tên
                 </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -134,7 +134,7 @@ const RegisterPage: React.FC = () => {
                     id="name"
                     name="name"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="Nguyễn Văn A"
                     value={formData.name}
                     onChange={handleInputChange}
                     className={`pl-10 ${errors.name ? 'border-red-500 focus:border-red-500' : ''}`}
@@ -148,7 +148,7 @@ const RegisterPage: React.FC = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Email Address
+                  Địa chỉ Email
                 </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -156,7 +156,7 @@ const RegisterPage: React.FC = () => {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="admin@dormitory.com"
+                    placeholder="admin@ktx.com"
                     value={formData.email}
                     onChange={handleInputChange}
                     className={`pl-10 ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
@@ -170,7 +170,7 @@ const RegisterPage: React.FC = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                  Password
+                  Mật khẩu
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -178,7 +178,7 @@ const RegisterPage: React.FC = () => {
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Create a strong password"
+                    placeholder="Tạo mật khẩu mạnh"
                     value={formData.password}
                     onChange={handleInputChange}
                     className={`pl-10 pr-10 ${errors.password ? 'border-red-500 focus:border-red-500' : ''}`}
@@ -200,7 +200,7 @@ const RegisterPage: React.FC = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
-                  Confirm Password
+                  Xác nhận mật khẩu
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -208,7 +208,7 @@ const RegisterPage: React.FC = () => {
                     id="confirmPassword"
                     name="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="Confirm your password"
+                    placeholder="Nhập lại mật khẩu"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     className={`pl-10 pr-10 ${errors.confirmPassword ? 'border-red-500 focus:border-red-500' : ''}`}
@@ -250,13 +250,13 @@ const RegisterPage: React.FC = () => {
                   />
                   <div className="flex-1">
                     <Label htmlFor="agreeToTerms" className="text-sm text-gray-600 leading-relaxed">
-                      I agree to the{' '}
+                      Tôi đồng ý với{' '}
                       <Link to="/terms" className="text-blue-600 hover:text-blue-800 hover:underline">
-                        Terms of Service
+                        Điều khoản dịch vụ
                       </Link>{' '}
-                      and{' '}
+                      và{' '}
                       <Link to="/privacy" className="text-blue-600 hover:text-blue-800 hover:underline">
-                        Privacy Policy
+                        Chính sách bảo mật
                       </Link>
                     </Label>
                     {errors.agreeToTerms && (
@@ -274,22 +274,22 @@ const RegisterPage: React.FC = () => {
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Creating account...</span>
+                    <span>Đang tạo tài khoản...</span>
                   </div>
                 ) : (
-                  'Create Account'
+                  'Tạo tài khoản'
                 )}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Already have an account?{' '}
+                Đã có tài khoản?{' '}
                 <Link 
                   to="/login" 
                   className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
                 >
-                  Sign in
+                  Đăng nhập ngay
                 </Link>
               </p>
             </div>

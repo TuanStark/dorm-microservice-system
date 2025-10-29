@@ -40,15 +40,15 @@ const LoginPage: React.FC = () => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'Email là bắt buộc';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = 'Email không hợp lệ';
     }
     
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Mật khẩu là bắt buộc';
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
     }
     
     setErrors(newErrors);
@@ -72,7 +72,7 @@ const LoginPage: React.FC = () => {
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
-      setSubmitError(error instanceof Error ? error.message : 'Login failed. Please try again.');
+      setSubmitError(error instanceof Error ? error.message : 'Đăng nhập thất bại. Vui lòng thử lại.');
     }
   };
 
@@ -94,10 +94,10 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
             <CardTitle className="text-2xl font-bold text-gray-900">
-              Welcome Back
+              Chào mừng trở lại
             </CardTitle>
             <CardDescription className="text-gray-600">
-              Sign in to your admin dashboard
+              Đăng nhập vào trang quản trị
             </CardDescription>
           </CardHeader>
           
@@ -105,7 +105,7 @@ const LoginPage: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Email Address
+                  Địa chỉ Email
                 </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -113,7 +113,7 @@ const LoginPage: React.FC = () => {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="admin@dormitory.com"
+                    placeholder="admin@ktx.com"
                     value={formData.email}
                     onChange={handleInputChange}
                     className={`pl-10 ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
@@ -127,7 +127,7 @@ const LoginPage: React.FC = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                  Password
+                  Mật khẩu
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -135,7 +135,7 @@ const LoginPage: React.FC = () => {
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your password"
+                    placeholder="Nhập mật khẩu của bạn"
                     value={formData.password}
                     onChange={handleInputChange}
                     className={`pl-10 pr-10 ${errors.password ? 'border-red-500 focus:border-red-500' : ''}`}
@@ -175,14 +175,14 @@ const LoginPage: React.FC = () => {
                     disabled={isLoading}
                   />
                   <Label htmlFor="rememberMe" className="text-sm text-gray-600">
-                    Remember me
+                    Ghi nhớ đăng nhập
                   </Label>
                 </div>
                 <Link 
                   to="/forgot-password" 
                   className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
                 >
-                  Forgot password?
+                  Quên mật khẩu?
                 </Link>
               </div>
 
@@ -194,22 +194,22 @@ const LoginPage: React.FC = () => {
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Signing in...</span>
+                    <span>Đang đăng nhập...</span>
                   </div>
                 ) : (
-                  'Sign In'
+                  'Đăng nhập'
                 )}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Don't have an account?{' '}
+                Chưa có tài khoản?{' '}
                 <Link 
                   to="/register" 
                   className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
                 >
-                  Create one
+                  Đăng ký ngay
                 </Link>
               </p>
             </div>

@@ -55,9 +55,9 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Cài đặt</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Manage your profile and system configurations
+          Quản lý hồ sơ và cấu hình hệ thống
         </p>
       </div>
 
@@ -69,16 +69,16 @@ const SettingsPage: React.FC = () => {
             <CardHeader>
               <div className="flex items-center space-x-2">
                 <User className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                <CardTitle>Profile Information</CardTitle>
+                <CardTitle>Thông tin hồ sơ</CardTitle>
               </div>
               <CardDescription>
-                Update your account profile information
+                Cập nhật thông tin tài khoản của bạn
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleProfileUpdate} className="space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name">Họ và tên</Label>
                   <Input
                     id="name"
                     value={profileFormData.name}
@@ -86,7 +86,7 @@ const SettingsPage: React.FC = () => {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">Địa chỉ Email</Label>
                   <Input
                     id="email"
                     type="email"
@@ -96,7 +96,7 @@ const SettingsPage: React.FC = () => {
                 </div>
                 <Button type="submit" className="w-full">
                   <Save className="mr-2 h-4 w-4" />
-                  Save Changes
+                  Lưu thay đổi
                 </Button>
               </form>
             </CardContent>
@@ -105,15 +105,15 @@ const SettingsPage: React.FC = () => {
           {/* Change Password */}
           <Card>
             <CardHeader>
-              <CardTitle>Change Password</CardTitle>
+              <CardTitle>Đổi mật khẩu</CardTitle>
               <CardDescription>
-                Update your account password for better security
+                Cập nhật mật khẩu để tăng bảo mật
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handlePasswordUpdate} className="space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="currentPassword">Current Password</Label>
+                  <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
                   <Input
                     id="currentPassword"
                     type="password"
@@ -122,7 +122,7 @@ const SettingsPage: React.FC = () => {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="newPassword">New Password</Label>
+                  <Label htmlFor="newPassword">Mật khẩu mới</Label>
                   <Input
                     id="newPassword"
                     type="password"
@@ -131,7 +131,7 @@ const SettingsPage: React.FC = () => {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                  <Label htmlFor="confirmPassword">Xác nhận mật khẩu mới</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -141,7 +141,7 @@ const SettingsPage: React.FC = () => {
                 </div>
                 <Button type="submit" className="w-full">
                   <Save className="mr-2 h-4 w-4" />
-                  Update Password
+                  Cập nhật mật khẩu
                 </Button>
               </form>
             </CardContent>
@@ -152,15 +152,15 @@ const SettingsPage: React.FC = () => {
             <CardHeader>
               <div className="flex items-center space-x-2">
                 <SettingsIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                <CardTitle>System Configuration</CardTitle>
+                <CardTitle>Cấu hình hệ thống</CardTitle>
               </div>
               <CardDescription>
-                Configure system-wide settings
+                Cấu hình các thiết lập chung của hệ thống
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-2">
-                <Label htmlFor="capacity">Dormitory Capacity Limit</Label>
+                <Label htmlFor="capacity">Giới hạn sức chứa ký túc xá</Label>
                 <Input
                   id="capacity"
                   type="number"
@@ -170,7 +170,7 @@ const SettingsPage: React.FC = () => {
               </div>
               <Button className="w-full">
                 <Save className="mr-2 h-4 w-4" />
-                Save Configuration
+                Lưu cấu hình
               </Button>
             </CardContent>
           </Card>
@@ -182,18 +182,18 @@ const SettingsPage: React.FC = () => {
             <CardHeader>
               <div className="flex items-center space-x-2">
                 <Bell className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                <CardTitle>Notifications</CardTitle>
+                <CardTitle>Thông báo</CardTitle>
               </div>
               <CardDescription>
-                Configure your notification preferences
+                Cấu hình tùy chọn thông báo
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Email Notifications</Label>
+                  <Label>Thông báo qua Email</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Receive email updates
+                    Nhận cập nhật qua email
                   </p>
                 </div>
                 <Switch
@@ -211,9 +211,9 @@ const SettingsPage: React.FC = () => {
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>SMS Notifications</Label>
+                  <Label>Thông báo SMS</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Receive SMS updates
+                    Nhận cập nhật qua SMS
                   </p>
                 </div>
                 <Switch
@@ -231,9 +231,9 @@ const SettingsPage: React.FC = () => {
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Maintenance Mode</Label>
+                  <Label>Chế độ bảo trì</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Enable maintenance mode
+                    Bật chế độ bảo trì
                   </p>
                 </div>
                 <Switch
@@ -250,15 +250,15 @@ const SettingsPage: React.FC = () => {
             <CardHeader>
               <div className="flex items-center space-x-2">
                 <CreditCard className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                <CardTitle>Payment Gateways</CardTitle>
+                <CardTitle>Cổng thanh toán</CardTitle>
               </div>
               <CardDescription>
-                Manage payment gateway keys
+                Quản lý khóa tích hợp cổng thanh toán
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-2">
-                <Label htmlFor="momoKey">MOMO API Key</Label>
+                <Label htmlFor="momoKey">Khóa API MOMO</Label>
                 <Input
                   id="momoKey"
                   type="password"
@@ -272,11 +272,11 @@ const SettingsPage: React.FC = () => {
                       },
                     })
                   }
-                  placeholder="Enter MOMO key"
+                  placeholder="Nhập khóa MOMO"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="vnpayKey">VNPay API Key</Label>
+                <Label htmlFor="vnpayKey">Khóa API VNPay</Label>
                 <Input
                   id="vnpayKey"
                   type="password"
@@ -290,12 +290,12 @@ const SettingsPage: React.FC = () => {
                       },
                     })
                   }
-                  placeholder="Enter VNPay key"
+                  placeholder="Nhập khóa VNPay"
                 />
               </div>
               <Button className="w-full">
                 <Save className="mr-2 h-4 w-4" />
-                Save Keys
+                Lưu khóa
               </Button>
             </CardContent>
           </Card>
