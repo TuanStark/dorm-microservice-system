@@ -10,18 +10,6 @@ const MockUsersInfo: React.FC = () => {
       password: 'admin123',
       role: 'admin',
       description: 'Full access to all features'
-    },
-    {
-      email: 'manager@dormitory.com',
-      password: 'manager123',
-      role: 'manager',
-      description: 'Limited access to management features'
-    },
-    {
-      email: 'staff@dormitory.com',
-      password: 'staff123',
-      role: 'staff',
-      description: 'Basic access to staff features'
     }
   ];
 
@@ -62,7 +50,7 @@ const MockUsersInfo: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-1">
           {mockUsers.map((user, index) => (
             <Card key={index} className="border-2 border-dashed border-gray-200">
               <CardHeader className="pb-3">

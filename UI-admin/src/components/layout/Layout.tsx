@@ -21,8 +21,7 @@ import {
   MessageSquare, 
   Settings, 
   LogOut, 
-  Menu, 
-  X, 
+  Menu,
   Bell, 
   Search,
   Moon,
@@ -104,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
           onClick={onToggle}
           className="hover:bg-gray-100 dark:hover:bg-gray-800"
         >
-          {isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
+          {isCollapsed ? <Menu className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
       </div>
 
