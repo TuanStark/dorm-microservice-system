@@ -12,11 +12,21 @@ import {
 import { Label } from '@/components/ui/label';
 import { Search, Plus, Edit, Trash2, Home } from 'lucide-react';
 import { Building } from '@/types';
+import { buildingSchema, BuildingFormData } from '@/lib/validations';
+import { useFormValidation } from '@/hooks/useFormValidation';
 
 const BuildingsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBuilding, setEditingBuilding] = useState<Building | null>(null);
+  const [formData, setFormData] = useState<BuildingFormData>({
+    name: '',
+    address: '',
+    totalRooms: 0,
+    description: '',
+  });
+  
+  const { errors, validate, clearErrors, clearFieldError } = useFormValidation(buildingSchema);
   // Trang Buildings chỉ quản lý tòa nhà
 
   const [buildings, setBuildings] = useState<Building[]>([
@@ -48,6 +58,67 @@ const BuildingsPage: React.FC = () => {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseInt(value) || 0 : value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      clearFieldError(name);
+    }
+  };
+
+  const handleEditBuilding = (building: Building) => {
+    setEditingBuilding(building);
+    setFormData({
+      name: building.name,
+      address: building.address,
+      totalRooms: building.totalRooms,
+      description: building.description || '',
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validate(formData)) return;
+    
+    if (editingBuilding) {
+      // Update existing building
+      setBuildings(buildings.map(b => 
+        b.id === editingBuilding.id 
+          ? { ...b, ...formData, availableRooms: b.availableRooms }
+          : b
+      ));
+    } else {
+      // Add new building
+      const newBuilding: Building = {
+        id: Date.now().toString(),
+        ...formData,
+        availableRooms: formData.totalRooms,
+        images: [],
+      };
+      setBuildings([...buildings, newBuilding]);
+    }
+    
+    // Reset form and close dialog
+    setFormData({ name: '', address: '', totalRooms: 0, description: '' });
+    setEditingBuilding(null);
+    setIsDialogOpen(false);
+    clearErrors();
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingBuilding(null);
+    setFormData({ name: '', address: '', totalRooms: 0, description: '' });
+    clearErrors();
+  };
+
   // Quản lý phòng ở trang Rooms
 
   const filteredBuildings = buildings.filter(building =>
@@ -64,7 +135,7 @@ const BuildingsPage: React.FC = () => {
             Quản lý tòa nhà và phòng ký túc xá
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700">
               <Plus className="mr-2 h-4 w-4" />
@@ -75,32 +146,65 @@ const BuildingsPage: React.FC = () => {
             <DialogHeader>
               <DialogTitle>{editingBuilding ? 'Chỉnh sửa tòa nhà' : 'Thêm tòa nhà mới'}</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <form onSubmit={handleSubmit} className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Tên tòa nhà</Label>
-                <Input id="name" defaultValue={editingBuilding?.name || ''} />
+                <Input 
+                  id="name" 
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className={errors.name ? 'border-red-500 focus:border-red-500' : ''}
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-600">{errors.name}</p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="address">Địa chỉ</Label>
-                <Input id="address" defaultValue={editingBuilding?.address || ''} />
+                <Input 
+                  id="address" 
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  className={errors.address ? 'border-red-500 focus:border-red-500' : ''}
+                />
+                {errors.address && (
+                  <p className="text-sm text-red-600">{errors.address}</p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="totalRooms">Tổng số phòng</Label>
-                <Input id="totalRooms" type="number" defaultValue={editingBuilding?.totalRooms || 0} />
+                <Input 
+                  id="totalRooms" 
+                  name="totalRooms"
+                  type="number" 
+                  value={formData.totalRooms}
+                  onChange={handleInputChange}
+                  className={errors.totalRooms ? 'border-red-500 focus:border-red-500' : ''}
+                />
+                {errors.totalRooms && (
+                  <p className="text-sm text-red-600">{errors.totalRooms}</p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="description">Mô tả</Label>
                 <textarea
                   id="description"
-                  className="min-h-[80px] px-3 py-2 rounded-md border border-input bg-background"
-                  defaultValue={editingBuilding?.description || ''}
+                  name="description"
+                  className={`min-h-[80px] px-3 py-2 rounded-md border border-input bg-background ${errors.description ? 'border-red-500 focus:border-red-500' : ''}`}
+                  value={formData.description}
+                  onChange={handleInputChange}
                 />
+                {errors.description && (
+                  <p className="text-sm text-red-600">{errors.description}</p>
+                )}
               </div>
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Hủy</Button>
-                <Button onClick={() => setIsDialogOpen(false)}>Lưu</Button>
+                <Button type="button" variant="outline" onClick={handleDialogClose}>Hủy</Button>
+                <Button type="submit">Lưu</Button>
               </div>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -155,7 +259,7 @@ const BuildingsPage: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setIsDialogOpen(true)}
+                    onClick={() => handleEditBuilding(building)}
                     title="Chỉnh sửa tòa nhà"
                   >
                     <Edit className="h-4 w-4" />

@@ -9,19 +9,22 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Home, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import MockUsersInfo from '../../components/MockUsersInfo';
 import DebugInfo from '../../components/DebugInfo';
+import { loginSchema, LoginFormData } from '@/lib/validations';
+import { useFormValidation } from '@/hooks/useFormValidation';
 
 const LoginPage: React.FC = () => {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
     rememberMe: false
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState('');
+  
+  const { errors, validate, clearFieldError } = useFormValidation(loginSchema);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -32,33 +35,14 @@ const LoginPage: React.FC = () => {
     
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      clearFieldError(name);
     }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.email) {
-      newErrors.email = 'Email là bắt buộc';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email không hợp lệ';
-    }
-    
-    if (!formData.password) {
-      newErrors.password = 'Mật khẩu là bắt buộc';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!validate(formData)) return;
     
     setSubmitError('');
     

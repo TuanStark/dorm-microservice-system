@@ -7,12 +7,25 @@ import { Label } from '@/components/ui/label';
 import { Search, Plus, Edit, Trash2, Home, Image as ImageIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Room } from '@/types';
+import { roomSchema, RoomFormData } from '@/lib/validations';
+import { useFormValidation } from '@/hooks/useFormValidation';
 
 const RoomsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [formData, setFormData] = useState<RoomFormData>({
+    roomNumber: '',
+    type: 'single',
+    capacity: 1,
+    price: 0,
+    buildingId: '1',
+    description: '',
+    amenities: [],
+  });
   const navigate = useNavigate();
+  
+  const { errors, validate, clearErrors, clearFieldError } = useFormValidation(roomSchema);
 
   const [rooms, setRooms] = useState<Room[]>([
     {
@@ -56,6 +69,71 @@ const RoomsPage: React.FC = () => {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseInt(value) || 0 : value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      clearFieldError(name);
+    }
+  };
+
+  const handleEditRoom = (room: Room) => {
+    setEditingRoom(room);
+    setFormData({
+      roomNumber: room.roomNumber,
+      type: room.type,
+      capacity: room.capacity,
+      price: room.price,
+      buildingId: room.buildingId,
+      description: room.description || '',
+      amenities: room.amenities,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validate(formData)) return;
+    
+    if (editingRoom) {
+      // Update existing room
+      setRooms(rooms.map(r => 
+        r.id === editingRoom.id 
+          ? { ...r, ...formData, buildingName: r.buildingName, images: r.images, status: r.status }
+          : r
+      ));
+    } else {
+      // Add new room
+      const newRoom: Room = {
+        id: Date.now().toString(),
+        ...formData,
+        buildingName: 'Block A', // This should come from building selection
+        images: [],
+        status: 'available',
+      };
+      setRooms([...rooms, newRoom]);
+    }
+    
+    // Reset form and close dialog
+    setFormData({ roomNumber: '', type: 'single', capacity: 1, price: 0, buildingId: '1', description: '', amenities: [] });
+    setEditingRoom(null);
+    setIsDialogOpen(false);
+    clearErrors();
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingRoom(null);
+    setFormData({ roomNumber: '', type: 'single', capacity: 1, price: 0, buildingId: '1', description: '', amenities: [] });
+    clearErrors();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -63,7 +141,7 @@ const RoomsPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Quản lý phòng</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Quản lý phòng ký túc xá và hình ảnh</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700">
               <Plus className="mr-2 h-4 w-4" />
@@ -74,33 +152,82 @@ const RoomsPage: React.FC = () => {
             <DialogHeader>
               <DialogTitle>{editingRoom ? 'Chỉnh sửa phòng' : 'Thêm phòng mới'}</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <form onSubmit={handleSubmit} className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="roomNumber">Số phòng</Label>
-                <Input id="roomNumber" defaultValue={editingRoom?.roomNumber || ''} />
+                <Input 
+                  id="roomNumber" 
+                  name="roomNumber"
+                  value={formData.roomNumber}
+                  onChange={handleInputChange}
+                  className={errors.roomNumber ? 'border-red-500 focus:border-red-500' : ''}
+                />
+                {errors.roomNumber && (
+                  <p className="text-sm text-red-600">{errors.roomNumber}</p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="type">Loại phòng</Label>
+                <select
+                  id="type"
+                  name="type"
+                  value={formData.type}
+                  onChange={handleInputChange}
+                  className={`h-10 rounded-md border border-input bg-background px-3 py-2 ${errors.type ? 'border-red-500 focus:border-red-500' : ''}`}
+                >
+                  <option value="single">Phòng đơn</option>
+                  <option value="shared">Phòng chung</option>
+                </select>
+                {errors.type && (
+                  <p className="text-sm text-red-600">{errors.type}</p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="price">Giá (USD/tháng)</Label>
-                <Input id="price" type="number" defaultValue={editingRoom?.price || 0} />
+                <Input 
+                  id="price" 
+                  name="price"
+                  type="number" 
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  className={errors.price ? 'border-red-500 focus:border-red-500' : ''}
+                />
+                {errors.price && (
+                  <p className="text-sm text-red-600">{errors.price}</p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="capacity">Sức chứa</Label>
-                <Input id="capacity" type="number" defaultValue={editingRoom?.capacity || 1} />
+                <Input 
+                  id="capacity" 
+                  name="capacity"
+                  type="number" 
+                  value={formData.capacity}
+                  onChange={handleInputChange}
+                  className={errors.capacity ? 'border-red-500 focus:border-red-500' : ''}
+                />
+                {errors.capacity && (
+                  <p className="text-sm text-red-600">{errors.capacity}</p>
+                )}
               </div>
               <div className="grid gap-2">
-                <Label>Hình ảnh (URL)</Label>
-                <div className="flex items-center gap-2">
-                  <Input placeholder="https://..." />
-                  <Button variant="outline">
-                    <ImageIcon className="h-4 w-4 mr-2" />Thêm
-                  </Button>
-                </div>
+                <Label htmlFor="description">Mô tả</Label>
+                <textarea
+                  id="description"
+                  name="description"
+                  className={`min-h-[80px] px-3 py-2 rounded-md border border-input bg-background ${errors.description ? 'border-red-500 focus:border-red-500' : ''}`}
+                  value={formData.description}
+                  onChange={handleInputChange}
+                />
+                {errors.description && (
+                  <p className="text-sm text-red-600">{errors.description}</p>
+                )}
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Hủy</Button>
-                <Button onClick={() => setIsDialogOpen(false)}>Lưu</Button>
+                <Button type="button" variant="outline" onClick={handleDialogClose}>Hủy</Button>
+                <Button type="submit">Lưu</Button>
               </div>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -154,7 +281,7 @@ const RoomsPage: React.FC = () => {
                 <p>Sức chứa: {room.capacity}</p>
               </div>
               <div className="mt-4 flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => { setEditingRoom(room); setIsDialogOpen(true); }}>
+                <Button variant="outline" size="sm" onClick={() => handleEditRoom(room)}>
                   <Edit className="h-4 w-4 mr-1" /> Sửa
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => handleDeleteRoom(room.id)}>

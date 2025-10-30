@@ -12,6 +12,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { Search, Plus, Edit, Trash2, Users as UsersIcon, Filter } from 'lucide-react';
 import { User } from '@/types';
+import { userSchema, UserFormData } from '@/lib/validations';
+import { useFormValidation } from '@/hooks/useFormValidation';
 
 const UsersPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,6 +21,14 @@ const UsersPage: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [formData, setFormData] = useState<UserFormData>({
+    name: '',
+    email: '',
+    role: 'student',
+    status: 'active',
+  });
+  
+  const { errors, validate, clearErrors, clearFieldError } = useFormValidation(userSchema);
 
   // Mock data
   const [users, setUsers] = useState<User[]>([
@@ -66,9 +76,65 @@ const UsersPage: React.FC = () => {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      clearFieldError(name);
+    }
+  };
+
   const handleEditUser = (user: User) => {
     setEditingUser(user);
+    setFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+    });
     setIsDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validate(formData)) return;
+    
+    if (editingUser) {
+      // Update existing user
+      setUsers(users.map(u => 
+        u.id === editingUser.id 
+          ? { ...u, ...formData, createdAt: u.createdAt, avatar: u.avatar }
+          : u
+      ));
+    } else {
+      // Add new user
+      const newUser: User = {
+        id: Date.now().toString(),
+        ...formData,
+        createdAt: new Date().toISOString().split('T')[0],
+        avatar: '',
+      };
+      setUsers([...users, newUser]);
+    }
+    
+    // Reset form and close dialog
+    setFormData({ name: '', email: '', role: 'student', status: 'active' });
+    setEditingUser(null);
+    setIsDialogOpen(false);
+    clearErrors();
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingUser(null);
+    setFormData({ name: '', email: '', role: 'student', status: 'active' });
+    clearErrors();
   };
 
   return (
@@ -81,7 +147,7 @@ const UsersPage: React.FC = () => {
             Quản lý tất cả người dùng đã đăng ký trong hệ thống
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700">
               <Plus className="mr-2 h-4 w-4" />
@@ -92,27 +158,55 @@ const UsersPage: React.FC = () => {
             <DialogHeader>
               <DialogTitle>{editingUser ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <form onSubmit={handleSubmit} className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Họ và tên</Label>
-                <Input id="name" defaultValue={editingUser?.name || ''} />
+                <Input 
+                  id="name" 
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className={errors.name ? 'border-red-500 focus:border-red-500' : ''}
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-600">{errors.name}</p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue={editingUser?.email || ''} />
+                <Input 
+                  id="email" 
+                  name="email"
+                  type="email" 
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className={errors.email ? 'border-red-500 focus:border-red-500' : ''}
+                />
+                {errors.email && (
+                  <p className="text-sm text-red-600">{errors.email}</p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="role">Vai trò</Label>
-                <select id="role" className="h-10 rounded-md border border-input bg-background px-3 py-2">
+                <select 
+                  id="role" 
+                  name="role"
+                  value={formData.role}
+                  onChange={handleInputChange}
+                  className={`h-10 rounded-md border border-input bg-background px-3 py-2 ${errors.role ? 'border-red-500 focus:border-red-500' : ''}`}
+                >
                   <option value="student">Sinh viên</option>
                   <option value="admin">Quản trị</option>
                 </select>
+                {errors.role && (
+                  <p className="text-sm text-red-600">{errors.role}</p>
+                )}
               </div>
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Hủy</Button>
-                <Button onClick={() => setIsDialogOpen(false)}>Lưu thay đổi</Button>
+                <Button type="button" variant="outline" onClick={handleDialogClose}>Hủy</Button>
+                <Button type="submit">Lưu thay đổi</Button>
               </div>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
