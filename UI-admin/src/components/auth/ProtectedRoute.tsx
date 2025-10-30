@@ -41,8 +41,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       staff: 1,
     };
 
-    const userRoleLevel = roleHierarchy[user.role];
-    const requiredRoleLevel = roleHierarchy[requiredRole];
+    const userRoleLevel = roleHierarchy[user.role as keyof typeof roleHierarchy];
+    const requiredRoleLevel = roleHierarchy[requiredRole as keyof typeof roleHierarchy];
 
     if (userRoleLevel < requiredRoleLevel) {
       return (

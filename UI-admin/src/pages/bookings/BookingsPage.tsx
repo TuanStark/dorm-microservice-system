@@ -2,14 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from '@/components/ui/dialog';
-import { Search, CheckCircle, XCircle, Calendar, Clock } from 'lucide-react';
+import { Search, CheckCircle, XCircle } from 'lucide-react';
 import { Booking } from '@/types';
 
 const BookingsPage: React.FC = () => {

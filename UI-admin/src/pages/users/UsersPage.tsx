@@ -10,7 +10,7 @@ import {
   DialogTrigger 
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Search, Plus, Edit, Trash2, Users as UsersIcon, Filter } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Users as UsersIcon } from 'lucide-react';
 import { User } from '@/types';
 import { userSchema, UserFormData } from '@/lib/validations';
 import { useFormValidation } from '@/hooks/useFormValidation';

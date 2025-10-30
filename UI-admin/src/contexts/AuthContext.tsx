@@ -1,35 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { authService } from '../services/authService';
+import { jwtDecode } from 'jwt-decode';
+import { AuthResponse, AuthState, LoginCredentials, RegisterData, User } from '@/types';
+import { ResponseData } from '@/types/globalClass';
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'admin' | 'manager' | 'staff';
-  avatar?: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
-export interface AuthState {
-  user: User | null;
-  token: string | null;
-  refreshToken: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -48,7 +23,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
-    token: null,
+    accessToken: null,
     refreshToken: null,
     isAuthenticated: false,
     isLoading: true,
@@ -66,7 +41,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const user = JSON.parse(userData);
           setAuthState({
             user,
-            token,
+            accessToken: token,
             refreshToken,
             isAuthenticated: true,
             isLoading: false,
@@ -85,11 +60,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Auto refresh token before expiry
   useEffect(() => {
-    if (!authState.token) return;
+    if (!authState.accessToken) return;
 
     const refreshInterval = setInterval(async () => {
       try {
-        await refreshAuthToken();
+        // await refreshAuthToken();
       } catch (error) {
         console.error('Auto token refresh failed:', error);
         logout();
@@ -97,23 +72,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 14 * 60 * 1000); // Refresh every 14 minutes
 
     return () => clearInterval(refreshInterval);
-  }, [authState.token]);
+  }, [authState.accessToken]);
 
   const login = async (credentials: LoginCredentials) => {
     try {
-      setAuthState(prev => ({ ...prev, isLoading: true }));
-      
-      const response = await authService.login(credentials);
-      const { user, token, refreshToken } = response;
+        setAuthState(prev => ({ ...prev, isLoading: true }));
+        
+      const response = await authService.login(credentials) as ResponseData<AuthResponse>;
+      const { accessToken, refreshToken } = response.data as unknown as AuthResponse;
+
+      // Decode accessToken to extract user info
+      const decoded: any = jwtDecode(accessToken);
+      const user = {
+        id: decoded.sub,
+        email: decoded.email,
+        name: decoded?.role?.name || '',
+        role: decoded?.role?.name?.toLowerCase() as User['role'],
+        avatar: '', // Optional: update if available
+        createdAt: decoded?.role?.createdAt || '',
+        updatedAt: decoded?.role?.updatedAt || '',
+        status: 'active'
+      };
 
       // Store in localStorage
-      localStorage.setItem('auth_token', token);
+      localStorage.setItem('auth_token', accessToken);
       localStorage.setItem('refresh_token', refreshToken);
       localStorage.setItem('user_data', JSON.stringify(user));
 
       setAuthState({
-        user,
-        token,
+        user: user as User,
+        accessToken,
         refreshToken,
         isAuthenticated: true,
         isLoading: false,
@@ -129,16 +117,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setAuthState(prev => ({ ...prev, isLoading: true }));
       
       const response = await authService.register(data);
-      const { user, token, refreshToken } = response;
+      const { accessToken, refreshToken } = response as unknown as AuthResponse;
+      const decoded: any = jwtDecode(accessToken);
+      const user = {
+        id: decoded.sub,
+        email: decoded.email,
+        name: decoded?.role?.name || '',
+        role: decoded?.role?.name?.toLowerCase() as User['role'],
+        avatar: '',
+        createdAt: decoded?.role?.createdAt || '',
+        updatedAt: decoded?.role?.updatedAt || '',
+        status: 'active'
+      };
 
       // Store in localStorage
-      localStorage.setItem('auth_token', token);
+      localStorage.setItem('auth_token', accessToken);
       localStorage.setItem('refresh_token', refreshToken);
       localStorage.setItem('user_data', JSON.stringify(user));
 
       setAuthState({
-        user,
-        token,
+        user: user as User,
+        accessToken,
         refreshToken,
         isAuthenticated: true,
         isLoading: false,
@@ -150,48 +149,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
-    // Clear localStorage
     localStorage.removeItem('auth_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user_data');
-
-    // Reset state
     setAuthState({
       user: null,
-      token: null,
+      accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
     });
-
-    // Call logout API (fire and forget)
     authService.logout().catch(console.error);
   };
 
-  const refreshAuthToken = async () => {
-    if (!authState.refreshToken) {
-      throw new Error('No refresh token available');
-    }
-
-    try {
-      const response = await authService.refreshToken(authState.refreshToken);
-      const { token, refreshToken } = response;
-
-      // Update localStorage
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('refresh_token', refreshToken);
-
-      setAuthState(prev => ({
-        ...prev,
-        token,
-        refreshToken,
-      }));
-    } catch (error) {
-      // If refresh fails, logout user
-      logout();
-      throw error;
-    }
-  };
+  // const refreshAuthToken = async () => {
+  //   if (!authState.refreshToken) {
+  //     throw new Error('No refresh token available');
+  //   }
+  //   try {
+  //     const response = await authService.refreshToken(authState.refreshToken);
+  //     const { accessToken, refreshToken } = response.token;
+      
+  //     localStorage.setItem('auth_token', accessToken);
+  //     localStorage.setItem('refresh_token', refreshToken);
+  //     setAuthState(prev => ({
+  //       ...prev,
+  //       accessToken,
+  //       refreshToken,
+  //     }));
+  //   } catch (error) {
+  //     logout();
+  //     throw error;
+  //   }
+  // };
 
   const updateUser = (userData: Partial<User>) => {
     if (!authState.user) return;
@@ -210,7 +200,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
-    refreshAuthToken,
+    // refreshAuthToken as () => Promise<void>,
+    refreshAuthToken: async () => {},
     updateUser,
   };
 

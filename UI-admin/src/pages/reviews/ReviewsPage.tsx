@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Star, Eye, EyeOff, MessageSquare, Filter } from 'lucide-react';
+import { Search, Star, Eye, EyeOff, MessageSquare } from 'lucide-react';
 import { Review } from '@/types';
 
 const ReviewsPage: React.FC = () => {

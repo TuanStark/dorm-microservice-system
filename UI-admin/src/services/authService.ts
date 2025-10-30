@@ -1,25 +1,14 @@
-import { User, LoginCredentials, RegisterData } from '../contexts/AuthContext';
-import { mockAuthService } from './mockAuthService';
+
+import { AuthResponse, LoginCredentials, RefreshTokenResponse, RegisterData, User } from '@/types';
+import { ResponseData } from '@/types/globalClass';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true' || !API_BASE_URL;
-
-interface AuthResponse {
-  user: User;
-  token: string;
-  refreshToken: string;
-}
-
-interface RefreshTokenResponse {
-  token: string;
-  refreshToken: string;
-}
 
 class AuthService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = `${API_BASE_URL}/api/auth`;
+    this.baseURL = `${API_BASE_URL}/auth`;
   }
 
   private async request<T>(
@@ -76,26 +65,15 @@ class AuthService {
     });
   }
 
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    console.log('AuthService.login called with:', credentials);
-    console.log('USE_MOCK_DATA:', USE_MOCK_DATA);
-    
-    if (USE_MOCK_DATA) {
-      console.log('Using mock auth service');
-      return mockAuthService.login(credentials);
-    }
-    
-    console.log('Using real API');
-    return this.request<AuthResponse>('/login', {
+  async login(credentials: LoginCredentials): Promise<ResponseData<AuthResponse>> {
+    const response = await this.request<ResponseData<AuthResponse>>('/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
+    return response.data as unknown as ResponseData<AuthResponse>;
   }
 
   async register(data: RegisterData): Promise<AuthResponse> {
-    if (USE_MOCK_DATA) {
-      return mockAuthService.register(data);
-    }
     
     return this.request<AuthResponse>('/register', {
       method: 'POST',
@@ -104,10 +82,6 @@ class AuthService {
   }
 
   async logout(): Promise<void> {
-    if (USE_MOCK_DATA) {
-      return mockAuthService.logout();
-    }
-    
     try {
       await this.authenticatedRequest('/logout', {
         method: 'POST',
@@ -119,10 +93,6 @@ class AuthService {
   }
 
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
-    if (USE_MOCK_DATA) {
-      return mockAuthService.refreshToken(refreshToken);
-    }
-    
     return this.request<RefreshTokenResponse>('/refresh', {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
@@ -130,18 +100,10 @@ class AuthService {
   }
 
   async getCurrentUser(): Promise<User> {
-    if (USE_MOCK_DATA) {
-      return mockAuthService.getCurrentUser();
-    }
-    
     return this.authenticatedRequest<User>('/me');
   }
 
   async updateProfile(userData: Partial<User>): Promise<User> {
-    if (USE_MOCK_DATA) {
-      return mockAuthService.updateProfile(userData);
-    }
-    
     return this.authenticatedRequest<User>('/profile', {
       method: 'PUT',
       body: JSON.stringify(userData),
@@ -153,10 +115,6 @@ class AuthService {
     newPassword: string;
     confirmPassword: string;
   }): Promise<void> {
-    if (USE_MOCK_DATA) {
-      return mockAuthService.changePassword(data);
-    }
-    
     return this.authenticatedRequest<void>('/change-password', {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -164,10 +122,6 @@ class AuthService {
   }
 
   async forgotPassword(email: string): Promise<void> {
-    if (USE_MOCK_DATA) {
-      return mockAuthService.forgotPassword(email);
-    }
-    
     return this.request<void>('/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email }),
@@ -179,10 +133,6 @@ class AuthService {
     password: string;
     confirmPassword: string;
   }): Promise<void> {
-    if (USE_MOCK_DATA) {
-      return mockAuthService.resetPassword(data);
-    }
-    
     return this.request<void>('/reset-password', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -190,10 +140,6 @@ class AuthService {
   }
 
   async verifyEmail(token: string): Promise<void> {
-    if (USE_MOCK_DATA) {
-      return mockAuthService.verifyEmail(token);
-    }
-    
     return this.request<void>('/verify-email', {
       method: 'POST',
       body: JSON.stringify({ token }),
@@ -201,10 +147,6 @@ class AuthService {
   }
 
   async resendVerificationEmail(): Promise<void> {
-    if (USE_MOCK_DATA) {
-      return mockAuthService.resendVerificationEmail();
-    }
-    
     return this.authenticatedRequest<void>('/resend-verification', {
       method: 'POST',
     });

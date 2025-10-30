@@ -48,8 +48,8 @@ const LoginPage: React.FC = () => {
     
     try {
       await login({
-        email: formData.email,
-        password: formData.password,
+          email: formData.email,
+          password: formData.password,
       });
       
       // Redirect to dashboard on successful login
