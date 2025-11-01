@@ -26,10 +26,7 @@ export interface Building {
   id: string;
   name: string;
   address: string;
-  totalRooms: number;
-  availableRooms: number;
   images: string[];
-  description?: string;
 }
 
 export interface Booking {

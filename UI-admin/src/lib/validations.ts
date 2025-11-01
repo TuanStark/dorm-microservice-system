@@ -50,14 +50,7 @@ export const buildingSchema = z.object({
     .min(1, 'Địa chỉ là bắt buộc')
     .min(5, 'Địa chỉ phải có ít nhất 5 ký tự')
     .max(200, 'Địa chỉ không được vượt quá 200 ký tự'),
-  totalRooms: z
-    .number()
-    .min(1, 'Tổng số phòng phải lớn hơn 0')
-    .max(1000, 'Tổng số phòng không được vượt quá 1000'),
-  description: z
-    .string()
-    .max(500, 'Mô tả không được vượt quá 500 ký tự')
-    .optional(),
+  images: z.array(z.string()).optional(),
 });
 
 // Room schemas

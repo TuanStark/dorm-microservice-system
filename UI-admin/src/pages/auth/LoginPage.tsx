@@ -7,8 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Home, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import MockUsersInfo from '../../components/MockUsersInfo';
-import DebugInfo from '../../components/DebugInfo';
 import { loginSchema, LoginFormData } from '@/lib/validations';
 import { useFormValidation } from '@/hooks/useFormValidation';
 
@@ -199,14 +197,6 @@ const LoginPage: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-        
-        {/* Mock Users Info - Only show in development */}
-        {import.meta.env.DEV && (
-          <div className="mt-8 space-y-6">
-            <DebugInfo />
-            <MockUsersInfo />
-          </div>
-        )}
       </div>
     </div>
   );
