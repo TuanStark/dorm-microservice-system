@@ -20,7 +20,7 @@ interface BuildingFormDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   building?: Building | null;
-  onSubmit: (data: BuildingFormData) => Promise<void>;
+  onSubmit: (data: BuildingFormData & { imageFiles?: File[] }) => Promise<void>;
   triggerButton?: React.ReactNode;
 }
 
@@ -36,27 +36,58 @@ const BuildingFormDialog: React.FC<BuildingFormDialogProps> = ({
     address: '',
     images: [],
   });
+  // Store File objects separately for FormData submission
+  const [imageFiles, setImageFiles] = useState<(File | string | null)[]>([]);
   
   const { errors, validate, clearErrors, clearFieldError } = useFormValidation(buildingSchema);
 
   // Load building data when editing
   useEffect(() => {
     if (building) {
+      const buildingImages = building.images || [];
       setFormData({
         name: building.name,
         address: building.address,
-        images: building.images || [],
+        images: buildingImages,
       });
+      // For existing buildings, images are URLs (strings)
+      setImageFiles(buildingImages);
     } else {
       setFormData({
         name: '',
         address: '',
         images: [],
       });
+      setImageFiles([]);
     }
     clearErrors();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [building]);
+
+  // Sync imageFiles array length with formData.images length
+  useEffect(() => {
+    const imagesLength = formData.images?.length || 0;
+    const filesLength = imageFiles.length;
+    
+    if (imagesLength !== filesLength) {
+      console.log('Syncing imageFiles array:', {
+        imagesLength,
+        filesLength,
+        needSync: imagesLength !== filesLength
+      });
+      
+      const newFiles = [...imageFiles];
+      // Extend array if needed
+      while (newFiles.length < imagesLength) {
+        newFiles.push(null);
+      }
+      // Trim array if needed
+      if (newFiles.length > imagesLength) {
+        newFiles.splice(imagesLength);
+      }
+      setImageFiles(newFiles);
+    }
+  }, [formData.images?.length]); // Only sync when length changes
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -82,11 +113,34 @@ const BuildingFormDialog: React.FC<BuildingFormDialogProps> = ({
     try {
       setIsSubmitting(true);
       setSubmitError(null);
-      await onSubmit(formData);
+      
+      // Prepare data with File objects instead of preview URLs
+      // Filter out null values and keep only File objects
+      const filesToUpload = imageFiles.filter((file): file is File => file instanceof File);
+      
+      console.log('Current imageFiles state:', imageFiles);
+      console.log('Filtered files to upload:', filesToUpload);
+      
+      const submitData = {
+        name: formData.name,
+        address: formData.address,
+        images: [], // Don't send preview URLs
+        imageFiles: filesToUpload,
+      };
+      
+      console.log('Submitting data:', {
+        name: submitData.name,
+        address: submitData.address,
+        imageFilesCount: filesToUpload.length,
+        imageFiles: filesToUpload.map(f => ({ name: f.name, size: f.size, type: f.type }))
+      });
+      
+      await onSubmit(submitData);
       
       // Reset form and close dialog on success
       if (!building) {
         setFormData({ name: '', address: '', images: [] });
+        setImageFiles([]);
       }
       onOpenChange(false);
     } catch (err) {
@@ -102,30 +156,72 @@ const BuildingFormDialog: React.FC<BuildingFormDialogProps> = ({
     onOpenChange(open);
     if (!open) {
       setFormData({ name: '', address: '', images: [] });
+      setImageFiles([]);
       clearErrors();
     }
   };
 
   // Handle image upload for multiple images
   const handleImageSelect = (index: number) => (imageData: string | File) => {
+    console.log(`handleImageSelect called for index ${index}:`, {
+      type: typeof imageData,
+      isFile: imageData instanceof File,
+      currentImageFilesLength: imageFiles.length,
+      currentImagesLength: formData.images?.length || 0,
+      imageData: imageData instanceof File ? { name: imageData.name, size: imageData.size } : imageData
+    });
+    
     const currentImages = formData.images || [];
+    // Ensure imageFiles array is large enough
+    let currentFiles = [...imageFiles];
+    while (currentFiles.length < currentImages.length) {
+      currentFiles.push(null);
+    }
+    
     if (imageData === '') {
       // Remove image
       const newImages = currentImages.filter((_, i) => i !== index);
+      const newFiles = currentFiles.filter((_, i) => i !== index);
       setFormData(prev => ({ ...prev, images: newImages }));
+      setImageFiles(newFiles);
+      console.log('Removed image at index', index);
     } else if (typeof imageData === 'string') {
-      // String URL (preview or existing image)
+      // String URL (existing image from server)
       const newImages = [...currentImages];
       newImages[index] = imageData;
+      const newFiles = [...currentFiles];
+      newFiles[index] = imageData; // Keep URL string for existing images
       setFormData(prev => ({ ...prev, images: newImages }));
+      setImageFiles(newFiles);
+      console.log('Set URL string at index', index, imageData);
     } else {
-      // File object - convert to data URL for preview
+      // File object - store File for FormData, create preview URL
+      const newFiles = [...currentFiles];
+      newFiles[index] = imageData; // Store File object
+      console.log(`Storing File at index ${index}:`, {
+        name: imageData.name,
+        size: imageData.size,
+        type: imageData.type,
+        currentFilesLength: currentFiles.length,
+        newFilesLength: newFiles.length,
+        updatedFiles: newFiles.map((f, i) => ({
+          index: i,
+          type: f instanceof File ? 'File' : typeof f,
+          name: f instanceof File ? f.name : 'N/A'
+        }))
+      });
+      setImageFiles(newFiles); // Update state immediately
+      
       const reader = new FileReader();
       reader.onload = (e) => {
-        const imageUrl = e.target?.result as string;
+        const previewUrl = e.target?.result as string;
         const newImages = [...currentImages];
-        newImages[index] = imageUrl;
+        newImages[index] = previewUrl; // Use data URL for preview only
         setFormData(prev => ({ ...prev, images: newImages }));
+        console.log('Preview URL set at index', index);
+      };
+      reader.onerror = () => {
+        console.error('FileReader error at index', index);
       };
       reader.readAsDataURL(imageData);
     }
@@ -133,10 +229,19 @@ const BuildingFormDialog: React.FC<BuildingFormDialogProps> = ({
 
   const handleAddImageSlot = () => {
     const currentImages = formData.images || [];
+    const currentFiles = imageFiles.length > 0 ? [...imageFiles] : new Array(currentImages.length).fill(null);
+    
+    console.log('Adding image slot:', {
+      currentImagesLength: currentImages.length,
+      currentFilesLength: currentFiles.length,
+      currentFiles: currentFiles
+    });
+    
     setFormData(prev => ({
       ...prev,
       images: [...currentImages, '']
     }));
+    setImageFiles([...currentFiles, null]);
   };
 
   const handleRemoveImageSlot = (index: number) => {

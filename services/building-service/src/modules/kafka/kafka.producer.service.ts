@@ -10,9 +10,7 @@ export class KafkaProducerService implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      Object.values(KafkaTopics).forEach((topic) =>
-        this.kafkaClient.subscribeToResponseOf(topic),
-      );
+      // Chỉ connect để sử dụng producer, không subscribe vì Building Service chỉ GỬI events
       await this.kafkaClient.connect();
     } catch (error) {
       console.warn('⚠️ Kafka not available, skipping producer setup:', error.message);
@@ -21,14 +19,29 @@ export class KafkaProducerService implements OnModuleInit {
 
   // Building events
   async emitBuildingCreatedEvent(payload: any) {
-    await this.kafkaClient.emit(KafkaTopics.BUILDING_CREATED, payload);
+    try {
+      await this.kafkaClient.emit(KafkaTopics.BUILDING_CREATED, payload);
+    } catch (error) {
+      console.warn('⚠️ Failed to emit BUILDING_CREATED event:', error.message);
+      // Không throw error để không ảnh hưởng đến flow chính
+    }
   }
 
   async emitBuildingUpdatedEvent(payload: any) {
-    await this.kafkaClient.emit(KafkaTopics.BUILDING_UPDATED, payload);
+    try {
+      await this.kafkaClient.emit(KafkaTopics.BUILDING_UPDATED, payload);
+    } catch (error) {
+      console.warn('⚠️ Failed to emit BUILDING_UPDATED event:', error.message);
+      // Không throw error để không ảnh hưởng đến flow chính
+    }
   }
 
   async emitBuildingDeletedEvent(payload: any) {
-    await this.kafkaClient.emit(KafkaTopics.BUILDING_DELETED, payload);
+    try {
+      await this.kafkaClient.emit(KafkaTopics.BUILDING_DELETED, payload);
+    } catch (error) {
+      console.warn('⚠️ Failed to emit BUILDING_DELETED event:', error.message);
+      // Không throw error để không ảnh hưởng đến flow chính
+    }
   }
 }

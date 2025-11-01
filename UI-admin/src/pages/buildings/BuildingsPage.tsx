@@ -9,6 +9,7 @@ import { PaginationMeta } from '@/types/globalClass';
 import BuildingFormDialog from './BuildingFormDialog';
 import BuildingCard from './BuildingCard';
 import Pagination from '@/components/ui/pagination';
+import ConfirmDialog from '@/components/ui/confirm-dialog';
 import { buildingService } from '@/services/buildingService';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
@@ -26,6 +27,8 @@ const BuildingsPage: React.FC = () => {
     totalPages: 1,
   });
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [buildingToDelete, setBuildingToDelete] = useState<string | null>(null);
 
   // Fetch buildings on component mount or page change
   useEffect(() => {
@@ -57,24 +60,29 @@ const BuildingsPage: React.FC = () => {
   };
 
   // Handle form submit from BuildingFormDialog
-  const handleFormSubmit = async (formData: BuildingFormData) => {
+  const handleFormSubmit = async (formData: BuildingFormData & { imageFiles?: File[] }) => {
     setError(null);
 
-    if (editingBuilding) {
-      // Update existing building
-      const updatedBuilding = await buildingService.update(editingBuilding.id, formData);
-      setBuildings(buildings.map(b => 
-        b.id === editingBuilding.id ? updatedBuilding : b
-      ));
-    } else {
-      // Create new building
-      await buildingService.create(formData);
-      // Refresh the list to get updated data with pagination
-      await fetchBuildings(currentPage);
+    try {
+      if (editingBuilding) {
+        // Update existing building
+        const updatedBuilding = await buildingService.update(editingBuilding.id, formData);
+        setBuildings(buildings.map(b => 
+          b.id === editingBuilding.id ? updatedBuilding : b
+        ));
+      } else {
+        // Create new building
+        await buildingService.create(formData);
+        // Refresh the list to get updated data with pagination
+        await fetchBuildings(currentPage);
+      }
+      
+      setEditingBuilding(null);
+      setIsDialogOpen(false);
+    } catch (error) {
+      // Error is already handled in BuildingFormDialog
+      throw error;
     }
-    
-    setEditingBuilding(null);
-    setIsDialogOpen(false);
   };
 
   const handleEditBuilding = (building: Building) => {
@@ -82,21 +90,27 @@ const BuildingsPage: React.FC = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDeleteBuilding = async (buildingId: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa tòa nhà này?')) {
-      return;
-    }
+  const handleDeleteBuilding = (buildingId: string) => {
+    setBuildingToDelete(buildingId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteBuilding = async () => {
+    if (!buildingToDelete) return;
 
     try {
       setError(null);
-      await buildingService.delete(buildingId);
+      await buildingService.delete(buildingToDelete);
       // Refresh the list to get updated data with pagination
       await fetchBuildings(currentPage);
+      setDeleteConfirmOpen(false);
+      setBuildingToDelete(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Không thể xóa tòa nhà';
       setError(errorMessage);
       console.error('Error deleting building:', err);
-      alert(errorMessage); // Show error to user
+      setDeleteConfirmOpen(false);
+      setBuildingToDelete(null);
     }
   };
 
@@ -202,28 +216,28 @@ const BuildingsPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
-        {filteredBuildings.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <Home className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium">Chưa có tòa nhà nào</p>
-                <p className="text-sm mt-2">Nhấn "Thêm tòa nhà" để bắt đầu</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredBuildings.map((building) => (
+      {filteredBuildings.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <Home className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">Chưa có tòa nhà nào</p>
+              <p className="text-sm mt-2">Nhấn "Thêm tòa nhà" để bắt đầu</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredBuildings.map((building) => (
             <BuildingCard
               key={building.id}
               building={building}
               onEdit={handleEditBuilding}
               onDelete={handleDeleteBuilding}
             />
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Pagination */}
       {paginationMeta.totalPages > 1 && (
@@ -235,6 +249,21 @@ const BuildingsPage: React.FC = () => {
           />
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => {
+          setDeleteConfirmOpen(false);
+          setBuildingToDelete(null);
+        }}
+        onConfirm={confirmDeleteBuilding}
+        title="Xóa tòa nhà"
+        description="Bạn có chắc chắn muốn xóa tòa nhà này? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="destructive"
+      />
     </div>
   );
 };

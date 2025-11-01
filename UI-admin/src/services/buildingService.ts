@@ -157,26 +157,98 @@ class BuildingService {
   }
 
   /**
-   * Create a new building
+   * Create a new building with FormData (to support file upload)
    */
-  async create(data: BuildingFormData): Promise<Building> {
-    const response = await this.authenticatedRequest<any>('/', {
-      method: 'POST',
-      body: JSON.stringify(data),
+  async create(data: BuildingFormData & { imageFiles?: File[] }): Promise<Building> {
+    const formData = new FormData();
+    
+    // Add text fields
+    formData.append('name', data.name);
+    formData.append('address', data.address);
+    
+    // Add image files (if provided)
+    if (data.imageFiles && data.imageFiles.length > 0) {
+      // Only send the first file if API expects single file
+      // Or send all files if API supports multiple
+      data.imageFiles.forEach((file) => {
+        formData.append('file', file);
+      });
+      console.log(`Sending ${data.imageFiles.length} file(s) with create request`);
+    } else {
+      console.log('No files to upload with create request');
+    }
+    
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    console.log('FormData entries:', {
+      name: formData.get('name'),
+      address: formData.get('address'),
+      hasFile: formData.has('file'),
     });
-    const buildingData = this.extractBuildingData(response);
+
+    const response = await fetch(`${this.baseURL}/`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Don't set Content-Type, let browser set it with boundary for FormData
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
+      console.error('Create building error:', errorMessage, errorData);
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    console.log('Create building success:', result);
+    const buildingData = this.extractBuildingData(result);
     return this.transformBuilding(buildingData);
   }
 
   /**
-   * Update an existing building
+   * Update an existing building with FormData (to support file upload)
    */
-  async update(id: string, data: BuildingFormData): Promise<Building> {
-    const response = await this.authenticatedRequest<any>(`/${id}`, {
+  async update(id: string, data: BuildingFormData & { imageFiles?: File[] }): Promise<Building> {
+    const formData = new FormData();
+    
+    // Add text fields
+    formData.append('name', data.name);
+    formData.append('address', data.address);
+    
+    // Add image files if provided
+    if (data.imageFiles && data.imageFiles.length > 0) {
+      data.imageFiles.forEach((file) => {
+        formData.append('file', file);
+      });
+    }
+    
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(`${this.baseURL}/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Don't set Content-Type, let browser set it with boundary for FormData
+      },
+      body: formData,
     });
-    const buildingData = this.extractBuildingData(response);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    const buildingData = this.extractBuildingData(result);
     return this.transformBuilding(buildingData);
   }
 
