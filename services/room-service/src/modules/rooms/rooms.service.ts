@@ -138,6 +138,10 @@ export class RoomsService {
         orderBy: orderBy,
         skip,
         take,
+        include: {
+          images: true,
+          amenities: true,
+        },
       }),
       this.prisma.room.count({
         where: where,

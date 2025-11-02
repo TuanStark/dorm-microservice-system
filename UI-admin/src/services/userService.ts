@@ -256,8 +256,7 @@ class UserService {
     const response = await this.authenticatedRequest<any>('/create', {
       method: 'POST',
       body: JSON.stringify(payload),
-    });
-    console.log('response', response);
+    }); 
     const userData = this.extractUserData(response);
     return this.transformUser(userData);
   }
@@ -287,7 +286,6 @@ class UserService {
       method: 'PATCH',
       body: JSON.stringify(payload),
     });
-    console.log('response', response);
     const userData = this.extractUserData(response);
     return this.transformUser(userData);
   }
@@ -297,11 +295,10 @@ class UserService {
    */
   async delete(id: string): Promise<void> {
     // Endpoint: PATCH /user/delete/:id (not DELETE method)
-    const response = await this.authenticatedRequest<void>(`/delete/${id}`, {
+    await this.authenticatedRequest<void>(`/delete/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({}), // May need to send empty body or status update
     });
-    console.log('response', response);
   }
 
   /**
