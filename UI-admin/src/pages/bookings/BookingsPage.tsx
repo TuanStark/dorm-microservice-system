@@ -1,68 +1,111 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, CheckCircle, XCircle } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Booking } from '@/types';
+import { PaginationMeta } from '@/types/globalClass';
+import BookingTableRow from './BookingTableRow';
+import Pagination from '@/components/ui/pagination';
+import { bookingService } from '@/services/bookingService';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 const BookingsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'completed'>('all');
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<'all' | 'pending' | 'paid' | 'failed' | 'refunded'>('all');
-
-  const [bookings, setBookings] = useState<Booking[]>([
-    {
-      id: '1',
-      userId: '1',
-      userName: 'John Doe',
-      userEmail: 'john.doe@student.edu',
-      roomId: '101',
-      roomNumber: '101',
-      buildingName: 'Block A',
-      checkInDate: '2024-07-01',
-      checkOutDate: '2024-08-31',
-      totalAmount: 500,
-      paymentStatus: 'paid',
-      bookingStatus: 'confirmed',
-      createdAt: '2024-06-15',
-    },
-    {
-      id: '2',
-      userId: '2',
-      userName: 'Jane Smith',
-      userEmail: 'jane.smith@student.edu',
-      roomId: '205',
-      roomNumber: '205',
-      buildingName: 'Block B',
-      checkInDate: '2024-09-01',
-      checkOutDate: '2024-12-31',
-      totalAmount: 800,
-      paymentStatus: 'pending',
-      bookingStatus: 'pending',
-      createdAt: '2024-06-20',
-    },
-  ]);
-
-  const handleApproveBooking = (bookingId: string) => {
-    setBookings(bookings.map(b => 
-      b.id === bookingId ? { ...b, bookingStatus: 'confirmed', paymentStatus: 'paid' } : b
-    ));
-  };
-
-  const handleRejectBooking = (bookingId: string) => {
-    setBookings(bookings.map(b => 
-      b.id === bookingId ? { ...b, bookingStatus: 'cancelled' } : b
-    ));
-  };
-
-  const filteredBookings = bookings.filter(booking => {
-    const matchesSearch = booking.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         booking.roomNumber.includes(searchTerm);
-    const matchesStatus = selectedStatus === 'all' || booking.bookingStatus === selectedStatus;
-    const matchesPaymentStatus = selectedPaymentStatus === 'all' || booking.paymentStatus === selectedPaymentStatus;
-    
-    return matchesSearch && matchesStatus && matchesPaymentStatus;
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [paginationMeta, setPaginationMeta] = useState<PaginationMeta>({
+    total: 0,
+    pageNumber: 1,
+    limitNumber: 10,
+    totalPages: 1,
   });
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Fetch bookings on component mount or filters/page change
+  useEffect(() => {
+    fetchBookings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, selectedStatus, selectedPaymentStatus]);
+
+  const fetchBookings = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await bookingService.getAll({
+        page: currentPage,
+        limit: 10,
+        status: selectedStatus !== 'all' ? selectedStatus : undefined,
+        paymentStatus: selectedPaymentStatus !== 'all' ? selectedPaymentStatus : undefined,
+        search: searchTerm || undefined,
+      });
+      
+      setBookings(response.data);
+      setPaginationMeta(response.meta);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách đặt phòng';
+      setError(errorMessage);
+      console.error('Error fetching bookings:', err);
+      setBookings([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchBookings();
+  };
+
+  const handleApproveBooking = async (bookingId: string) => {
+    try {
+      setError(null);
+      await bookingService.approve(bookingId);
+      // Refresh the list
+      await fetchBookings();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Không thể duyệt đặt phòng';
+      setError(errorMessage);
+      await fetchBookings();
+      console.error('Error approving booking:', err);
+    }
+  };
+
+  const handleRejectBooking = async (bookingId: string) => {
+    try {
+      setError(null);
+      await bookingService.reject(bookingId);
+      // Refresh the list
+      await fetchBookings();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Không thể từ chối đặt phòng';
+      setError(errorMessage);
+      await fetchBookings();
+      console.error('Error rejecting booking:', err);
+    }
+  };
+
+  // Calculate stats
+  const totalBookings = bookings.length;
+  const pendingBookings = bookings.filter(b => b.bookingStatus === 'pending').length;
+  const confirmedBookings = bookings.filter(b => b.bookingStatus === 'confirmed').length;
+  const totalRevenue = bookings.filter(b => b.paymentStatus === 'paid').reduce((sum, b) => sum + b.totalAmount, 0);
+
+  if (isLoading && bookings.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -73,35 +116,37 @@ const BookingsPage: React.FC = () => {
         </p>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tổng lượt đặt</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{bookings.length}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{totalBookings}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Chờ duyệt</p>
-            <p className="text-2xl font-bold text-orange-600">{bookings.filter(b => b.bookingStatus === 'pending').length}</p>
+            <p className="text-2xl font-bold text-orange-600">{pendingBookings}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Đã xác nhận</p>
-            <p className="text-2xl font-bold text-green-600">{bookings.filter(b => b.bookingStatus === 'confirmed').length}</p>
+            <p className="text-2xl font-bold text-green-600">{confirmedBookings}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Doanh thu</p>
             <p className="text-2xl font-bold text-blue-600">
-              ${bookings.filter(b => b.paymentStatus === 'paid').reduce((sum, b) => sum + b.totalAmount, 0)}
+              ${totalRevenue.toLocaleString()}
             </p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Filters */}
       <Card>
         <CardHeader>
           <CardTitle>Bộ lọc</CardTitle>
@@ -114,13 +159,17 @@ const BookingsPage: React.FC = () => {
                 placeholder="Tìm kiếm đặt phòng..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="pl-10"
               />
             </div>
             <select
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value as any)}
-              className="px-4 py-2 border border-gray-300 rounded-md"
+              onChange={(e) => {
+                setSelectedStatus(e.target.value as any);
+                setCurrentPage(1);
+              }}
+              className="h-10 rounded-md border border-input bg-background px-3 py-2"
             >
               <option value="all">Tất cả trạng thái</option>
               <option value="pending">Chờ duyệt</option>
@@ -130,8 +179,11 @@ const BookingsPage: React.FC = () => {
             </select>
             <select
               value={selectedPaymentStatus}
-              onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
-              className="px-4 py-2 border border-gray-300 rounded-md"
+              onChange={(e) => {
+                setSelectedPaymentStatus(e.target.value as any);
+                setCurrentPage(1);
+              }}
+              className="h-10 rounded-md border border-input bg-background px-3 py-2"
             >
               <option value="all">Tất cả thanh toán</option>
               <option value="pending">Chờ thanh toán</option>
@@ -139,94 +191,80 @@ const BookingsPage: React.FC = () => {
               <option value="failed">Thất bại</option>
               <option value="refunded">Hoàn tiền</option>
             </select>
+            <Button onClick={handleSearch} variant="outline">
+              Tìm
+            </Button>
           </div>
         </CardContent>
       </Card>
 
+      {error && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2"
+                onClick={() => fetchBookings()}
+              >
+                Thử lại
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Bookings Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Đặt phòng ({filteredBookings.length})</CardTitle>
+          <CardTitle>Đặt phòng ({bookings.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Sinh viên</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Phòng</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Nhận phòng</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Trả phòng</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Số tiền</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Thanh toán</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Trạng thái</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold">Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBookings.map((booking) => (
-                  <tr key={booking.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">{booking.userName}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{booking.userEmail}</p>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="font-medium text-gray-900 dark:text-white">{booking.roomNumber}</span>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{booking.buildingName}</p>
-                    </td>
-                    <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{booking.checkInDate}</td>
-                    <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{booking.checkOutDate}</td>
-                    <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">${booking.totalAmount}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        booking.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' :
-                        booking.paymentStatus === 'pending' ? 'bg-orange-100 text-orange-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {booking.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        booking.bookingStatus === 'confirmed' ? 'bg-green-100 text-green-700' :
-                        booking.bookingStatus === 'pending' ? 'bg-orange-100 text-orange-700' :
-                        booking.bookingStatus === 'completed' ? 'bg-blue-100 text-blue-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
-                        {booking.bookingStatus}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      {booking.bookingStatus === 'pending' && (
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleApproveBooking(booking.id)}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Duyệt
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleRejectBooking(booking.id)}
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Từ chối
-                          </Button>
-                        </div>
-                      )}
-                      {booking.bookingStatus === 'confirmed' && (
-                        <span className="text-sm text-gray-600 dark:text-gray-400">Đã xác nhận</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {bookings.length === 0 ? (
+            <div className="text-center py-10 text-gray-500 dark:text-gray-400">
+              <p>Chưa có đặt phòng nào</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-700">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Sinh viên</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Phòng</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Nhận phòng</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Trả phòng</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Số tiền</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Thanh toán</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Trạng thái</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bookings.map((booking) => (
+                      <BookingTableRow
+                        key={booking.id || `booking-${booking.id}`}
+                        booking={booking}
+                        onApprove={handleApproveBooking}
+                        onReject={handleRejectBooking}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {paginationMeta.totalPages > 1 && (
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={paginationMeta.pageNumber}
+                    totalPages={paginationMeta.totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

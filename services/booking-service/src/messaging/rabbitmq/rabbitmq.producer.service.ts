@@ -35,12 +35,20 @@ export class RabbitMQProducerService {
 
   async publishMessage(pattern: string, data: any): Promise<void> {
     try {
+      if (!this.client) {
+        this.logger.error('RabbitMQ client is not available');
+        throw new Error('RabbitMQ client is not available');
+      }
+      
       await this.client.connect();
       await lastValueFrom(this.client.emit(pattern, data));
       this.logger.log(`Message published to pattern: ${pattern}, data: ${JSON.stringify(data)}`);
-    } catch (error) {
-      this.logger.error(`Failed to publish message: ${error.message}`, error.stack);
-      throw error; // Có thể thêm retry logic
+    } catch (error: any) {
+      const errorMessage = error?.message || error?.toString() || 'Unknown error';
+      this.logger.error(`Failed to publish message to pattern ${pattern}: ${errorMessage}`, error?.stack);
+      // Không throw error để tránh crash toàn bộ flow
+      // Chỉ log warning và tiếp tục
+      this.logger.warn(`Continuing execution despite RabbitMQ publish failure`);
     }
   }
 

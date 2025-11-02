@@ -70,6 +70,7 @@ class AuthService {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
+    console.log('response login', response);
     return response.data as unknown as ResponseData<AuthResponse>;
   }
 

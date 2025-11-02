@@ -7,6 +7,7 @@ import { FindAllDto } from '../../common/global/find-all.dto';
 import { RabbitMQProducerService } from '../../messaging/rabbitmq/rabbitmq.producer.service';
 import { RedisService } from '../../messaging/redis/redis.service';
 import { KafkaProducerService } from 'src/messaging/kafka/kafka.producer.service';
+import { ExternalService } from '../../common/external/external.service';
 // import { BookingCreatedDto } from '../../messaging/rabbitmq/dto/booking-created.dto.service';
 // import { BookingUpdatedDto } from '../../messaging/rabbitmq/dto/booking-updated.dto';
 // import { BookingCanceledDto } from '../../messaging/rabbitmq/dto/booking-canceled.dto';
@@ -20,6 +21,7 @@ export class BookingService {
     private readonly rabbitMQService: RabbitMQProducerService,
     private readonly redisService: RedisService,
     private readonly kafkaProducerService: KafkaProducerService,
+    private readonly externalService: ExternalService,
     ) {}
 
   async create(userId: string, dto: CreateBookingDto) {
@@ -77,7 +79,7 @@ export class BookingService {
     }
   }
 
-  async findAll(query: FindAllDto) {
+  async findAll(query: FindAllDto, token?: string) {
     const {
       page = 1,
       limit = 10,
@@ -118,8 +120,14 @@ export class BookingService {
       this.prisma.booking.count({ where }),
     ]);
 
+    // Enrich bookings với user và room data
+    const enrichedBookings = await this.enrichBookingsWithExternalData(
+      bookings,
+      token,
+    );
+
     return {
-      data: bookings,
+      data: enrichedBookings,
       meta: {
         total,
         pageNumber,
@@ -129,12 +137,60 @@ export class BookingService {
     };
   }
 
-  async findOne(id: string) {
+  /**
+   * Enrich bookings với user và room data từ external services
+   */
+  private async enrichBookingsWithExternalData(
+    bookings: any[],
+    token?: string,
+  ): Promise<any[]> {
+    if (bookings.length === 0) {
+      return bookings;
+    }
+
+    // Collect tất cả userId và roomId
+    const userIds: string[] = [];
+    const roomIds: string[] = [];
+
+    bookings.forEach((booking) => {
+      if (booking.userId && !userIds.includes(booking.userId)) {
+        userIds.push(booking.userId);
+      }
+      booking.details?.forEach((detail: any) => {
+        if (detail.roomId && !roomIds.includes(detail.roomId)) {
+          roomIds.push(detail.roomId);
+        }
+      });
+    });
+
+    // Fetch users và rooms parallel (tối ưu performance)
+    const [usersMap, roomsMap] = await Promise.all([
+      this.externalService.getUsersByIds(userIds, token),
+      this.externalService.getRoomsByIds(roomIds, token),
+    ]);
+
+    // Map data vào bookings
+    return bookings.map((booking) => ({
+      ...booking,
+      user: usersMap.get(booking.userId) || null,
+      details: booking.details?.map((detail: any) => ({
+        ...detail,
+        room: roomsMap.get(detail.roomId) || null,
+      })) || [],
+    }));
+  }
+
+  async findOne(id: string, token?: string) {
     // Check cache first
     const cachedBooking = await this.redisService.get(`booking:${id}`);
     if (cachedBooking) {
       this.logger.debug(`Cache hit for booking:${id}`);
-      return cachedBooking;
+      // Still enrich với external data vì cache có thể không có user/room
+      const enriched = await this.enrichBookingsWithExternalData(
+        [cachedBooking],
+        token,
+      );
+      return enriched[0];
     }
 
     const booking = await this.prisma.booking.findUnique({
@@ -146,11 +202,15 @@ export class BookingService {
       throw new NotFoundException('Booking not found');
     }
 
-    // Cache booking
+    // Enrich với external data
+    const enriched = await this.enrichBookingsWithExternalData([booking], token);
+    const enrichedBooking = enriched[0];
+
+    // Cache booking (không cache external data để tránh stale data)
     await this.redisService.set(`booking:${id}`, booking, 3600);
     this.logger.debug(`Cached booking:${id}`);
 
-    return booking;
+    return enrichedBooking;
   }
 
   async update(id: string, dto: UpdateBookingDto) {
@@ -195,11 +255,16 @@ export class BookingService {
     }
   }
 
-  async cancel(id: string) {
+  async cancel(id: string, status: BookingStatus) {
     try {
+      // Validate status - chỉ cho phép CONFIRMED hoặc CANCELED
+      if (status !== BookingStatus.CONFIRMED && status !== BookingStatus.CANCELED) {
+        throw new Error(`Invalid status: ${status}. Only CONFIRMED or CANCELED are allowed.`);
+      }
+
       const booking = await this.prisma.booking.update({
         where: { id },
-        data: { status: BookingStatus.CANCELED },
+        data: { status }, // Sử dụng parameter status thay vì hardcode
         include: { details: true },
       });
 
@@ -207,32 +272,61 @@ export class BookingService {
       await this.redisService.set(`booking:${id}`, booking, 3600);
       this.logger.debug(`Updated cache for booking:${id}`);
 
-      // Send RabbitMQ event for booking.canceled
-      const bookingCanceledEvent: any = {
+      // Send Kafka event for booking status change
+      const bookingStatusEvent: any = {
         bookingId: booking.id,
         userId: booking.userId,
+        status: booking.status,
         details: booking.details.map((d) => d.roomId),
       };
-      await this.rabbitMQService.publishMessage('booking.canceled', bookingCanceledEvent);
-      this.logger.log(`Published booking.canceled event: ${booking.id}`);
 
-      // Send RabbitMQ payment cancel request
-      const totalAmount = booking.details.reduce((sum, detail) => sum + detail.price, 0);
-      await this.rabbitMQService.publishMessage('payment.cancel', {
-        bookingId: booking.id,
-        userId: booking.userId,
-        amount: totalAmount,
-        eventType: 'payment.cancel',
-        metadata: {
-          reason: 'Booking cancelled by user',
-          cancelledAt: new Date().toISOString(),
-        },
-      });
-      this.logger.log(`Published payment.cancel event for booking: ${booking.id}`);
+      // Send RabbitMQ events (wrapped in try-catch để không crash nếu RabbitMQ fail)
+      try {
+        if (status === BookingStatus.CANCELED) {
+          // Send RabbitMQ event for booking.canceled
+          await this.rabbitMQService.publishMessage('booking.canceled', bookingStatusEvent);
+          this.logger.log(`Published booking.canceled event: ${booking.id}`);
+
+          // Send RabbitMQ payment cancel request
+          const totalAmount = booking.details.reduce((sum, detail) => sum + detail.price, 0);
+          await this.rabbitMQService.publishMessage('payment.cancel', {
+            bookingId: booking.id,
+            userId: booking.userId,
+            amount: totalAmount,
+            eventType: 'payment.cancel',
+            metadata: {
+              reason: 'Booking cancelled by user',
+              cancelledAt: new Date().toISOString(),
+            },
+          });
+          this.logger.log(`Published payment.cancel event for booking: ${booking.id}`);
+        } else if (status === BookingStatus.CONFIRMED) {
+          // Send event for booking confirmed
+          await this.rabbitMQService.publishMessage('booking.confirmed', bookingStatusEvent);
+          this.logger.log(`Published booking.confirmed event: ${booking.id}`);
+        }
+      } catch (error) {
+        // Log warning nhưng không throw - booking đã được update thành công
+        this.logger.warn(
+          `Failed to publish RabbitMQ events for booking ${booking.id}: ${error.message || error}`,
+        );
+      }
+
+      // Send Kafka event (wrapped in try-catch)
+      try {
+        await this.kafkaProducerService.emitBookingCreatedEvent(bookingStatusEvent);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to publish Kafka event for booking ${booking.id}: ${error.message || error}`,
+        );
+      }
 
       return booking;
     } catch (error) {
-      this.logger.error(`Failed to cancel booking ${id}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to update booking status ${id} to ${status}: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }

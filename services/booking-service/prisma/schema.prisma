@@ -21,6 +21,8 @@ model Booking {
   endDate     DateTime
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+  paymentId   String?
+  paymentStatus PaymentStatus?
 
   // Relation
   details     BookingDetail[]
@@ -46,6 +48,12 @@ enum BookingStatus {
   PENDING
   CONFIRMED
   CANCELED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
 }
 
 

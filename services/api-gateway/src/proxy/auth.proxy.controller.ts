@@ -16,12 +16,19 @@ export class AuthProxyController {
     });
     
     try {
-      // Remove /auth hoặc /auths prefix để forward đúng path đến auth-service
-      // Ví dụ: 
-      //   /auth/user/profile → /user/profile
-      //   /auths/user → /user
-      //   (vì auth-service có @Controller('user'))
-      let path = req.originalUrl.replace(/^\/auths?/, '') || '/';
+      // Xử lý path để forward đúng đến auth-service
+      // Auth-service có 2 controllers:
+      //   - @Controller('auth') → /auth/login, /auth/register, etc. (phải giữ /auth prefix)
+      //   - @Controller('user') → /user/:id, /user/profile, etc. (không có /auth prefix)
+      let path = req.originalUrl;
+      
+      // Chỉ remove /auth prefix nếu path là /auth/user/... hoặc /auths/user/...
+      // Các path khác như /auth/login, /auth/register → giữ nguyên
+      if (path.startsWith('/auth/user') || path.startsWith('/auths/user')) {
+        path = path.replace(/^\/auths?/, '');
+      }
+      // Nếu không có /auth prefix (đã remove) thì giữ nguyên
+      // Ví dụ: /auth/login → giữ nguyên → /auth/login ✅
       
       // Đảm bảo path luôn bắt đầu bằng /
       if (!path.startsWith('/')) {

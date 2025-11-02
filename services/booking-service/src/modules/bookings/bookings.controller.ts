@@ -6,6 +6,7 @@ import { UpdateBookingDto } from './dto/update-booking.dto';
 import { HttpMessage, HttpStatus } from 'src/common/global/globalEnum';
 import { ResponseData } from 'src/common/global/globalClass';
 import { FindAllDto } from 'src/common/global/find-all.dto';
+import { BookingStatus } from '@prisma/client';
 
 @Controller('bookings')
 export class BookingController {
@@ -32,9 +33,14 @@ export class BookingController {
   }
 
   @Get()
-  async findAll(@Query() query: FindAllDto) {
+  async findAll(@Query() query: FindAllDto, @Req() req: Request) {
     try {
-      const bookings = await this.bookingsService.findAll(query);
+      // Lấy token từ request header (từ API Gateway forward xuống)
+      const authHeader = req.headers['authorization'] as string;
+      const token = authHeader?.startsWith('Bearer ') 
+        ? authHeader.substring(7) 
+        : authHeader;
+      const bookings = await this.bookingsService.findAll(query, token);
       return new ResponseData(bookings, HttpStatus.SUCCESS, HttpMessage.SUCCESS);
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -42,9 +48,15 @@ export class BookingController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string, @Req() req: Request) {
     try {
-      const booking = await this.bookingsService.findOne(id);
+      // Lấy token từ request header
+      const authHeader = req.headers['authorization'] as string;
+      const token = authHeader?.startsWith('Bearer ') 
+        ? authHeader.substring(7) 
+        : authHeader;
+      
+      const booking = await this.bookingsService.findOne(id, token);
       return new ResponseData(booking, HttpStatus.SUCCESS, HttpMessage.SUCCESS);
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -62,14 +74,27 @@ export class BookingController {
   }
 
   @Put(':id')
-  async remove(@Param('id') id: string) {
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: { status: BookingStatus },
+  ) {
     try {
-      const booking = await this.bookingsService.cancel(id);
-      return new ResponseData(booking, HttpStatus.NO_CONTENT, HttpMessage.SUCCESS);
+      const { status } = body;
+      
+      // Validate status
+      if (!status || !['CONFIRMED', 'CANCELED'].includes(status)) {
+        throw new BadRequestException(
+          'Status is required and must be either CONFIRMED or CANCELED',
+        );
+      }
+
+      const booking = await this.bookingsService.cancel(id, status);
+      return new ResponseData(booking, HttpStatus.SUCCESS, HttpMessage.SUCCESS);
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
+
 
   @Get('user/:userId')
   async getBookingByUserId(@Param('userId') userId: string) {
