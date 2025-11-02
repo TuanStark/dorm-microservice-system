@@ -18,6 +18,18 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @UseGuards(JwtAuthGuard)
+  @Get()
+  async getCurrentUser(@Req() req) {
+    try {
+      // Khi gọi GET /user, trả về profile của user hiện tại (từ JWT token)
+      const user = await this.userService.findOneForAuthentication(req.user.id);
+      return new ResponseData(user, HttpStatus.OK, HttpMessage.SUCCESS);
+    } catch (error) {
+      return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Req() req) {
     return this.userService.findOneForAuthentication(req.user.id);
@@ -28,13 +40,16 @@ export class UserController {
   async create(@Body() createUserDto: CreateUserDto) {
     try {
       const user = await this.userService.create(createUserDto);
-      return new ResponseData(user, HttpStatus.OK, HttpMessage.SUCCESS);
+      return new ResponseData(user, HttpStatus.CREATED, HttpMessage.SUCCESS);
     } catch (error) {
-      return new ResponseData(null, HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.SERVER_ERROR);
+      // Trả về error message chi tiết từ service
+      const status = error.status || HttpStatus.INTERNAL_SERVER_ERROR;
+      const message = error.message || HttpMessage.SERVER_ERROR;
+      return new ResponseData(null, status, message);
     }
   }
 
-  // @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   // @Roles('ADMIN') // Chỉ role 'admin' được truy cập
   @Get('all')
   async findAll(@Query() query: FindAllDto) {

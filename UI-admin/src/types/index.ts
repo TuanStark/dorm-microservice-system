@@ -1,8 +1,13 @@
+export interface Role {
+  id: string;
+  name: string;
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'student' | 'admin';
+  role: Role;
   status: 'active' | 'inactive';
   createdAt: string;
   avatar?: string;

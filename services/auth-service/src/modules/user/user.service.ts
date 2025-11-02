@@ -11,20 +11,57 @@ export class UserService {
   ) { }
 
   async create(createUserDto: CreateUserDto) {
-    const { password, roleId, ...userData } = createUserDto;
-    const hashedPassword = password ? await argon.hash(password) : "123456";
+    try {
+      const { password, roleId, email, ...userData } = createUserDto;
+      
+      // Kiểm tra email đã tồn tại chưa
+      const existingUser = await this.findByEmail(email);
+      if (existingUser) {
+        throw new BadRequestException(`User with email ${email} already exists`);
+      }
 
-    return this.prisma.user.create({
-      data: {
+      const hashedPassword = password ? await argon.hash(password) : await argon.hash("123456");
+
+      // Chuẩn bị data với role nếu có roleId
+      const data: any = {
         ...userData,
+        email,
         password: hashedPassword,
-        role: {
-          connect: {
-            id: roleId
-          }
+      };
+
+      // Chỉ connect role nếu roleId được cung cấp
+      if (roleId) {
+        // Kiểm tra role có tồn tại không
+        const role = await this.prisma.role.findUnique({
+          where: { id: roleId },
+        });
+        
+        if (!role) {
+          throw new BadRequestException(`Role with id ${roleId} not found`);
         }
-      },
-    });
+
+        data.role = {
+          connect: {
+            id: roleId,
+          },
+        };
+      }
+
+      return await this.prisma.user.create({
+        data,
+        include: {
+          role: true,
+        },
+      });
+    } catch (error) {
+      // Re-throw nếu là BadRequestException hoặc NotFoundException
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        throw error;
+      }
+      // Log và throw generic error cho các lỗi khác
+      console.error('Error creating user:', error);
+      throw new BadRequestException(`Failed to create user: ${error.message}`);
+    }
   }
 
   async findAll(query: FindAllDto) {
@@ -140,7 +177,7 @@ export class UserService {
     try {
       await this.prisma.user.update({
         where: { id },
-        data: updateUserDto,
+        data: { status: 'unactive' },
       });
 
       return { message: 'User deleted successfully' };
