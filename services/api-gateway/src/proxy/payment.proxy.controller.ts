@@ -21,18 +21,20 @@ export class PaymentProxyController {
   async getAllPayments(@Req() req: express.Request, @Res() res: express.Response) {
     try {
       const authHeader = req.headers['authorization'];
-      const path = req.originalUrl.replace(/^\/payment/, '');
+      const path = req.originalUrl.replace(/^\/payment/, '') || '';
 
       const result = await this.upstream.forwardRequest(
         'payment',
-        `/payment${path}`,
+        `/payments${path}`,
         req.method,
-        req.body,
+        req,
         { 
           authorization: authHeader,
         },
       );
-      res.json(result);
+      
+      res.set(result.headers || {});
+      res.status(result.status || 200).json(result.data);
     } catch (error) {
       const status = (error && error.status) || 500;
       res.status(status).json({ error: error.message || 'Internal Gateway Error' });
@@ -44,21 +46,24 @@ export class PaymentProxyController {
   @All('*')
   async proxyPayment(@Req() req: express.Request, @Res() res: express.Response) {
     try {
+      const authHeader = req.headers['authorization'];
       const userId = (req as any).user?.sub || (req as any).user?.id;
       
       const path = req.originalUrl.replace(/^\/payment/, '');
 
       const result = await this.upstream.forwardRequest(
         'payment',
-        `/payment${path}`,
+        `/payments${path}`,
         req.method,
-        req.body,
+        req,
         { 
-          authorization: req.headers['authorization'],
+          authorization: authHeader,
           'x-user-id': userId,
         },
       );
-      res.json(result);
+      
+      res.set(result.headers || {});
+      res.status(result.status || 200).json(result.data);
     } catch (error) {
       const status = (error && error.status) || 500;
       res.status(status).json({ error: error.message || 'Internal Gateway Error' });
