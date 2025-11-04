@@ -227,17 +227,21 @@ pipeline {
                     )
                 }
                 */
+                echo "✅ ${SERVICE_NAME} build completed successfully!"
             }
         }
         failure {
-            // TODO: Uncomment when deployment is ready
-            /*
-            slackSend(
-                channel: '#deployments',
-                color: 'danger',
-                message: "❌ ${SERVICE_NAME} deployment failed! Check Jenkins logs."
-            )
-            */
+            script {
+                // TODO: Uncomment when deployment is ready
+                /*
+                slackSend(
+                    channel: '#deployments',
+                    color: 'danger',
+                    message: "❌ ${SERVICE_NAME} deployment failed! Check Jenkins logs."
+                )
+                */
+                echo "❌ ${SERVICE_NAME} build failed! Check logs."
+            }
         }
     }
     triggers {
