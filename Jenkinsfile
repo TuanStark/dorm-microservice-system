@@ -42,6 +42,7 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
+                    changedFiles = changedFiles ?: ""
                     echo "Changed files:\n${changedFiles}"
 
                     def changedServices = []
@@ -65,7 +66,12 @@ pipeline {
                         return
                     }
 
-                    env.CHANGED_SERVICES = changedServices.join(',')
+                    // Set CHANGED_SERVICES env variable (hoặc tất cả services nếu buildAll)
+                    if (buildAll) {
+                        env.CHANGED_SERVICES = services.join(',')
+                    } else {
+                        env.CHANGED_SERVICES = changedServices.join(',')
+                    }
                     echo "Services to build: ${env.CHANGED_SERVICES}"
                 }
             }
@@ -86,9 +92,18 @@ pipeline {
                         'upload-service'
                     ]
 
-                    def buildTargets = (env.BRANCH_NAME == 'main') 
-                        ? services 
-                        : env.CHANGED_SERVICES.split(',').findAll { it?.trim() }
+                    def buildTargets = []
+                    if (env.BRANCH_NAME == 'main') {
+                        buildTargets = services
+                    } else {
+                        // Xử lý trường hợp CHANGED_SERVICES có thể null hoặc rỗng
+                        if (env.CHANGED_SERVICES && env.CHANGED_SERVICES.trim()) {
+                            buildTargets = env.CHANGED_SERVICES.split(',').findAll { it?.trim() }
+                        } else {
+                            echo "No services to build, skipping..."
+                            return
+                        }
+                    }
 
                     echo "Final build targets: ${buildTargets}"
 
