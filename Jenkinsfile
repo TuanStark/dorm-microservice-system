@@ -10,8 +10,8 @@ pipeline {
     }
 
     environment {
-        REGISTRY_URL = 'your-registry-url'  // ví dụ: registry.hub.docker.com
-        REGISTRY_CREDENTIAL = 'dockerhub-credentials' // ID credentials trong Jenkins
+        REGISTRY_URL = 'https://index.docker.io/v1/'  // ví dụ: registry.hub.docker.com
+        REGISTRY_CREDENTIAL = 'docker-credentials' // ID credentials trong Jenkins
     }
 
     stages {
