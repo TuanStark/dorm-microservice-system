@@ -19,7 +19,7 @@ import { memoryStorage } from 'multer';
     HttpModule,
     MulterModule.register({
       storage: memoryStorage(),
-      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+      limits: { fileSize: 10 * 1024 * 1024 },
     }),
     ThrottlerModule.forRoot([{
       ttl: Number(process.env.RATE_LIMIT_TTL || 60) * 1000, // Convert to milliseconds
