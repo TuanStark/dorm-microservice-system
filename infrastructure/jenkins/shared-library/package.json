@@ -1,0 +1,6 @@
+{
+    "name": "dorm-booking-shared-library",
+    "version": "1.0.0",
+    "description": "Shared library for dorm-booking-system CI/CD pipelines"
+}
+
