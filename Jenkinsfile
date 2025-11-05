@@ -84,16 +84,14 @@ pipeline {
                         dir('services/api-gateway') {
                             script {
                                 def serviceName = 'api-gateway'
-                                def servicePort = '3000'
                                 def dockerImage = "dorm-booking/${serviceName}"
                                 def dockerTag = "${BUILD_NUMBER}"
                                 
-                                // Build service
-                                sh 'npm ci'
-                                sh 'npm run lint'
-                                sh 'npm run format'
-                                sh 'npm test -- --coverage --watchAll=false || true'
-                                sh 'npm run build'
+                                // Build service trong Docker container với Node.js
+                                sh """
+                                    docker run --rm -v "\${WORKSPACE}/services/${serviceName}:/app" -w /app node:18-alpine \
+                                    sh -c "npm ci && npm run lint && npm run format && npm test -- --coverage --watchAll=false || true && npm run build"
+                                """
                                 
                                 // Build Docker image
                                 docker.build("${dockerImage}:${dockerTag}", "-f Dockerfile .")
@@ -129,13 +127,11 @@ pipeline {
                                 def dockerImage = "dorm-booking/${serviceName}"
                                 def dockerTag = "${BUILD_NUMBER}"
                                 
-                                sh 'npm ci'
-                                sh 'npm run lint'
-                                sh 'npm run format'
-                                sh 'npx prisma generate'
-                                sh 'npx prisma migrate deploy || true'
-                                sh 'npm test -- --coverage --watchAll=false || true'
-                                sh 'npm run build'
+                                // Build trong Docker container với Node.js và Prisma
+                                sh """
+                                    docker run --rm -v "\${WORKSPACE}/services/${serviceName}:/app" -w /app node:18-alpine \
+                                    sh -c "npm ci && npm run lint && npm run format && npx prisma generate && npm test -- --coverage --watchAll=false || true && npm run build"
+                                """
                                 
                                 docker.build("${dockerImage}:${dockerTag}", "-f Dockerfile .")
                                 sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${dockerImage}:${dockerTag} || true"
@@ -167,13 +163,10 @@ pipeline {
                                 def dockerImage = "dorm-booking/${serviceName}"
                                 def dockerTag = "${BUILD_NUMBER}"
                                 
-                                sh 'npm ci'
-                                sh 'npm run lint'
-                                sh 'npm run format'
-                                sh 'npx prisma generate'
-                                sh 'npx prisma migrate deploy || true'
-                                sh 'npm test -- --coverage --watchAll=false || true'
-                                sh 'npm run build'
+                                sh '''
+                                    docker run --rm -v "$(pwd):/app" -w /app node:18-alpine \
+                                    sh -c "npm ci && npm run lint && npm run format && npx prisma generate && npm test -- --coverage --watchAll=false || true && npm run build"
+                                '''
                                 
                                 docker.build("${dockerImage}:${dockerTag}", "-f Dockerfile .")
                                 sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${dockerImage}:${dockerTag} || true"
@@ -205,13 +198,10 @@ pipeline {
                                 def dockerImage = "dorm-booking/${serviceName}"
                                 def dockerTag = "${BUILD_NUMBER}"
                                 
-                                sh 'npm ci'
-                                sh 'npm run lint'
-                                sh 'npm run format'
-                                sh 'npx prisma generate'
-                                sh 'npx prisma migrate deploy || true'
-                                sh 'npm test -- --coverage --watchAll=false || true'
-                                sh 'npm run build'
+                                sh '''
+                                    docker run --rm -v "$(pwd):/app" -w /app node:18-alpine \
+                                    sh -c "npm ci && npm run lint && npm run format && npx prisma generate && npm test -- --coverage --watchAll=false || true && npm run build"
+                                '''
                                 
                                 docker.build("${dockerImage}:${dockerTag}", "-f Dockerfile .")
                                 sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${dockerImage}:${dockerTag} || true"
@@ -243,13 +233,10 @@ pipeline {
                                 def dockerImage = "dorm-booking/${serviceName}"
                                 def dockerTag = "${BUILD_NUMBER}"
                                 
-                                sh 'npm ci'
-                                sh 'npm run lint'
-                                sh 'npm run format'
-                                sh 'npx prisma generate'
-                                sh 'npx prisma migrate deploy || true'
-                                sh 'npm test -- --coverage --watchAll=false || true'
-                                sh 'npm run build'
+                                sh '''
+                                    docker run --rm -v "$(pwd):/app" -w /app node:18-alpine \
+                                    sh -c "npm ci && npm run lint && npm run format && npx prisma generate && npm test -- --coverage --watchAll=false || true && npm run build"
+                                '''
                                 
                                 docker.build("${dockerImage}:${dockerTag}", "-f Dockerfile .")
                                 sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${dockerImage}:${dockerTag} || true"
@@ -281,13 +268,10 @@ pipeline {
                                 def dockerImage = "dorm-booking/${serviceName}"
                                 def dockerTag = "${BUILD_NUMBER}"
                                 
-                                sh 'npm ci'
-                                sh 'npm run lint'
-                                sh 'npm run format'
-                                sh 'npx prisma generate'
-                                sh 'npx prisma migrate deploy || true'
-                                sh 'npm test -- --coverage --watchAll=false || true'
-                                sh 'npm run build'
+                                sh '''
+                                    docker run --rm -v "$(pwd):/app" -w /app node:18-alpine \
+                                    sh -c "npm ci && npm run lint && npm run format && npx prisma generate && npm test -- --coverage --watchAll=false || true && npm run build"
+                                '''
                                 
                                 docker.build("${dockerImage}:${dockerTag}", "-f Dockerfile .")
                                 sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${dockerImage}:${dockerTag} || true"
@@ -319,13 +303,10 @@ pipeline {
                                 def dockerImage = "dorm-booking/${serviceName}"
                                 def dockerTag = "${BUILD_NUMBER}"
                                 
-                                sh 'npm ci'
-                                sh 'npm run lint'
-                                sh 'npm run format'
-                                sh 'npx prisma generate'
-                                sh 'npx prisma migrate deploy || true'
-                                sh 'npm test -- --coverage --watchAll=false || true'
-                                sh 'npm run build'
+                                sh '''
+                                    docker run --rm -v "$(pwd):/app" -w /app node:18-alpine \
+                                    sh -c "npm ci && npm run lint && npm run format && npx prisma generate && npm test -- --coverage --watchAll=false || true && npm run build"
+                                '''
                                 
                                 docker.build("${dockerImage}:${dockerTag}", "-f Dockerfile .")
                                 sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${dockerImage}:${dockerTag} || true"
@@ -357,11 +338,10 @@ pipeline {
                                 def dockerImage = "dorm-booking/${serviceName}"
                                 def dockerTag = "${BUILD_NUMBER}"
                                 
-                                sh 'npm ci'
-                                sh 'npm run lint'
-                                sh 'npm run format'
-                                sh 'npm test -- --coverage --watchAll=false || true'
-                                sh 'npm run build'
+                                sh '''
+                                    docker run --rm -v "$(pwd):/app" -w /app node:18-alpine \
+                                    sh -c "npm ci && npm run lint && npm run format && npm test -- --coverage --watchAll=false || true && npm run build"
+                                '''
                                 
                                 docker.build("${dockerImage}:${dockerTag}", "-f Dockerfile .")
                                 sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${dockerImage}:${dockerTag} || true"
