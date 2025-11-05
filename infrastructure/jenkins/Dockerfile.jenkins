@@ -1,0 +1,27 @@
+# Dockerfile để tạo Jenkins image có Docker CLI
+# Sử dụng image này trong docker-compose.yml thay vì jenkins/jenkins:lts
+
+FROM jenkins/jenkins:lts
+
+USER root
+
+# Cài Docker CLI
+RUN apt-get update && \
+    apt-get install -y \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    apt-get install -y docker-ce-cli && \
+    rm -rf /var/lib/apt/lists/*
+
+# Cài Node.js 18 (optional - nếu muốn dùng Node.js trực tiếp)
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+USER jenkins
+

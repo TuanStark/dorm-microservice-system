@@ -2,7 +2,12 @@ version: "3.9"
 
 services:
   jenkins:
-    image: jenkins/jenkins:lts
+    # Option 1: Build từ Dockerfile custom có Docker CLI và Node.js
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
+    # Option 2: Dùng image có sẵn (sau khi đã build một lần)
+    # image: jenkins/jenkins:lts
     container_name: booking_jenkins
     user: root
     ports:
@@ -12,8 +17,8 @@ services:
       - JAVA_OPTS=-Xmx1g
     volumes:
       - jenkins_home:/var/jenkins_home
-      # If your Docker Desktop supports it, this lets Jenkins run docker builds.
-      # On some Windows setups this mount may not be available; you can remove it if not needed.
+      # Mount Docker socket để Jenkins có thể dùng Docker CLI
+      # QUAN TRỌNG: Đảm bảo Docker socket được mount đúng
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
     networks:
